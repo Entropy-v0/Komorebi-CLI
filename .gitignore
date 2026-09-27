@@ -20,3 +20,9 @@ ENV/
 .DS_Store
 .vscode/
 .idea/
+
+# Local backups and runtime logs
+respaldos/*
+!respaldos/.gitkeep
+logs/*
+!logs/.gitkeep
