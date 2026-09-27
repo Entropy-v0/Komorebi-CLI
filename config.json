@@ -1,0 +1,18 @@
+{
+  "nombre_app": "Komorebi Mini IDE",
+  "rutas": {
+    "respaldos": "respaldos",
+    "logs": "logs"
+  },
+  "ia": {
+    "proveedor": "gemini",
+    "modelo": "gemini-1.5-flash",
+    "api_key": "",
+    "url_base": "https://generativelanguage.googleapis.com/v1beta/models",
+    "endpoint_analisis": "/analizar",
+    "timeout_segundos": 15
+  },
+  "servidor": {
+    "puerto": 8000
+  }
+}
