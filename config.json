@@ -1,0 +1,15 @@
+{
+  "nombre_app": "Komorebi Mini IDE",
+  "rutas": {
+    "respaldos": "respaldos",
+    "logs": "logs"
+  },
+  "ia": {
+    "url_base": "http://localhost:8000/api/ia",
+    "endpoint_analisis": "/analizar",
+    "timeout_segundos": 15
+  },
+  "servidor": {
+    "puerto": 8000
+  }
+}
