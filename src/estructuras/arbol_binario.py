@@ -55,14 +55,15 @@ class ArbolBinario:
                 actual.izquierda = NodoArbol(valor)
                 return True
             return self._insertar_recursivo(actual.izquierda, valor)
-        elif valor > actual.valor:
+
+        if valor > actual.valor:
             if actual.derecha is None:
                 actual.derecha = NodoArbol(valor)
                 return True
             return self._insertar_recursivo(actual.derecha, valor)
-        else:
-            # El valor ya existe en el árbol
-            return False
+
+        # El valor ya existe en el árbol
+        return False
 
     def consultar(self, valor: Any) -> Optional[Any]:
         """Busca un valor en el árbol y lo retorna si existe, o None en caso contrario."""
@@ -75,14 +76,13 @@ class ArbolBinario:
 
     def _buscar_nodo(self, actual: Optional[NodoArbol], valor: Any) -> Optional[NodoArbol]:
         """Búsqueda binaria recursiva sobre el árbol."""
-        if actual is None:
-            return None
-        if valor == actual.valor:
+        if actual is None or valor == actual.valor:
             return actual
-        elif valor < actual.valor:
+
+        if valor < actual.valor:
             return self._buscar_nodo(actual.izquierda, valor)
-        else:
-            return self._buscar_nodo(actual.derecha, valor)
+
+        return self._buscar_nodo(actual.derecha, valor)
 
     def modificar(self, valor_viejo: Any, valor_nuevo: Any) -> bool:
         """Modifica un valor existente en el árbol.
@@ -112,36 +112,45 @@ class ArbolBinario:
         return True
 
     def _eliminar_recursivo(self, actual: Optional[NodoArbol], valor: Any) -> Optional[NodoArbol]:
-        """Elimina recursivamente un nodo y retorna la nueva raíz del subárbol."""
+        """Elimina recursivamente un nodo y retorna la nueva raíz del subárbol.
+        
+        Aplica pattern matching sobre los hijos del nodo objetivo para reducir
+        la carga cognitiva y manejar los estados de topología de forma declarativa.
+        """
         if actual is None:
             return None
 
+        # Búsqueda hacia el subárbol correspondiente (cláusulas de guarda)
         if valor < actual.valor:
             actual.izquierda = self._eliminar_recursivo(actual.izquierda, valor)
-        elif valor > actual.valor:
+            return actual
+
+        if valor > actual.valor:
             actual.derecha = self._eliminar_recursivo(actual.derecha, valor)
-        else:
-            # Caso 1: Nodo sin hijos (hoja)
-            if actual.izquierda is None and actual.derecha is None:
+            return actual
+
+        # Nodo objetivo localizado (valor == actual.valor)
+        match (actual.izquierda, actual.derecha):
+            case (None, None):
+                # Caso 1: Nodo sin hijos (hoja)
                 return None
 
-            # Caso 2: Nodo con un solo hijo
-            if actual.izquierda is None:
-                temporal = actual.derecha
-                actual.derecha = None  # Liberación de enlace
-                return temporal
-            elif actual.derecha is None:
-                temporal = actual.izquierda
-                actual.izquierda = None  # Liberación de enlace
-                return temporal
+            case (None, hijo_derecho):
+                # Caso 2a: Nodo con un único hijo (derecho)
+                actual.derecha = None
+                return hijo_derecho
 
-            # Caso 3: Nodo con dos hijos
-            # Obtenemos el sucesor inorden (el mínimo del subárbol derecho)
-            sucesor = self._obtener_minimo(actual.derecha)
-            actual.valor = sucesor.valor
-            actual.derecha = self._eliminar_recursivo(actual.derecha, sucesor.valor)
+            case (hijo_izquierdo, None):
+                # Caso 2b: Nodo con un único hijo (izquierdo)
+                actual.izquierda = None
+                return hijo_izquierdo
 
-        return actual
+            case (_, _):
+                # Caso 3: Nodo con dos hijos (sustitución por sucesor inorden)
+                sucesor = self._obtener_minimo(actual.derecha)
+                actual.valor = sucesor.valor
+                actual.derecha = self._eliminar_recursivo(actual.derecha, sucesor.valor)
+                return actual
 
     def _obtener_minimo(self, actual: NodoArbol) -> NodoArbol:
         """Encuentra el nodo con el valor más pequeño a partir del nodo dado."""

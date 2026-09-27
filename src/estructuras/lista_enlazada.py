@@ -48,10 +48,13 @@ class ListaEnlazada:
         """
         if posicion is None or posicion >= self._tamano:
             self.insertar_al_final(dato)
-        elif posicion <= 0:
+            return
+
+        if posicion <= 0:
             self.insertar_al_inicio(dato)
-        else:
-            self._insertar_en_posicion_intermedia(dato, posicion)
+            return
+
+        self._insertar_en_posicion_intermedia(dato, posicion)
 
     def insertar_al_inicio(self, dato: Any) -> None:
         """Inserta un nuevo dato como primer nodo de la lista."""
@@ -159,19 +162,31 @@ class ListaEnlazada:
         return dato
 
     def _desvincular_nodo(self, nodo: NodoLista) -> None:
-        """Desconecta el nodo de la lista y limpia sus punteros para liberar memoria."""
-        nodo_anterior = nodo.anterior
-        nodo_siguiente = nodo.siguiente
+        """Desconecta el nodo de la lista y limpia sus punteros para liberar memoria.
+        
+        Aplica pattern matching sobre los enlaces (anterior, siguiente) para
+        tratar exhaustivamente los 4 estados topológicos posibles del nodo.
+        """
+        match (nodo.anterior, nodo.siguiente):
+            case (None, None):
+                # Único nodo en la lista
+                self._cabeza = None
+                self._cola = None
 
-        if nodo_anterior is not None:
-            nodo_anterior.siguiente = nodo_siguiente
-        else:
-            self._cabeza = nodo_siguiente
+            case (None, siguiente):
+                # El nodo es la cabeza
+                self._cabeza = siguiente
+                siguiente.anterior = None
 
-        if nodo_siguiente is not None:
-            nodo_siguiente.anterior = nodo_anterior
-        else:
-            self._cola = nodo_anterior
+            case (anterior, None):
+                # El nodo es la cola
+                self._cola = anterior
+                anterior.siguiente = None
+
+            case (anterior, siguiente):
+                # Nodo intermedio
+                anterior.siguiente = siguiente
+                siguiente.anterior = anterior
 
         # Limpieza estricta de referencias internas del nodo para liberación de memoria
         nodo.siguiente = None
