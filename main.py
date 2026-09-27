@@ -13,6 +13,7 @@ from src.servicios.servicio_historial import ServicioHistorial
 from src.servicios.servicio_diagnosticos import ServicioDiagnosticos
 from src.servicios.servicio_cola_ia import ServicioColaIA
 from src.servicios.servicio_cliente_ia import ServicioClienteIA
+from src.servicios.servicio_logs import ServicioLogs
 
 from src.comandos.invocador_comandos import InvocadorComandos
 from src.comandos.comando_new import ComandoNew
@@ -48,12 +49,13 @@ def bootstrap(ruta_config: str = "config.json") -> ConsolaApp:
     contexto = ContextoApp(configuracion=configuracion)
 
     # 3. Inicialización de los servicios de negocio (Receptores)
-    servicio_archivos = ServicioArchivos(contexto)
+    servicio_logs = ServicioLogs(configuracion.ruta_logs)
+    servicio_archivos = ServicioArchivos(contexto, servicio_logs)
     servicio_sintaxis = ServicioSintaxis()
     servicio_historial = ServicioHistorial()
     servicio_diagnosticos = ServicioDiagnosticos()
     servicio_cola_ia = ServicioColaIA(contexto)
-    servicio_cliente_ia = ServicioClienteIA(configuracion)
+    servicio_cliente_ia = ServicioClienteIA(configuracion, servicio_logs)
 
     # 4. Inicialización del despachador y registro de comandos (Patrón Command)
     invocador = InvocadorComandos()
@@ -74,7 +76,7 @@ def bootstrap(ruta_config: str = "config.json") -> ConsolaApp:
     invocador.registrar_comando(ComandoExit())
 
     # 5. Creación de la consola interactiva CLI
-    return ConsolaApp(invocador, contexto)
+    return ConsolaApp(invocador, contexto, servicio_logs=servicio_logs)
 
 
 def main() -> None:

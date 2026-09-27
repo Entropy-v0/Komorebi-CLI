@@ -19,10 +19,12 @@ class ConsolaApp:
         invocador: InvocadorComandos,
         contexto: ContextoApp,
         analizador: Optional[AnalizadorComandos] = None,
+        servicio_logs: Optional[Any] = None,
     ) -> None:
         self._invocador: InvocadorComandos = invocador
         self._contexto: ContextoApp = contexto
         self._analizador: AnalizadorComandos = analizador or AnalizadorComandos()
+        self._servicio_logs: Optional[Any] = servicio_logs
         self._en_ejecucion: bool = False
 
     @property
@@ -46,7 +48,10 @@ class ConsolaApp:
         nombre_cmd, args = self._analizador.parsear(linea)
         if not nombre_cmd:
             return True
-        return self._invocador.ejecutar_comando(nombre_cmd, args)
+        exito = self._invocador.ejecutar_comando(nombre_cmd, args)
+        if not exito and self._servicio_logs:
+            self._servicio_logs.registrar_advertencia("ConsolaApp", f"Comando no reconocido o fallido: '{linea.strip()}'")
+        return exito
 
     def iniciar_repl(self) -> None:
         """Inicia el ciclo continuo de terminal hasta que el usuario invoque 'exit' o Ctrl+D."""
@@ -65,6 +70,8 @@ class ConsolaApp:
                 self._en_ejecucion = False
                 break
             except Exception as e:
+                if self._servicio_logs:
+                    self._servicio_logs.registrar_error("ConsolaApp", f"Excepción no controlada: {str(e)}")
                 print(f"[Error no controlado] {str(e)}")
 
     def _imprimir_bienvenida(self) -> None:

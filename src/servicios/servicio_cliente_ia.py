@@ -16,8 +16,9 @@ class ServicioClienteIA:
     y propuestas de refactorización de código sin requerir librerías externas de terceros.
     """
 
-    def __init__(self, configuracion: ConfiguracionApp) -> None:
+    def __init__(self, configuracion: ConfiguracionApp, servicio_logs: Optional[Any] = None) -> None:
         self._configuracion: ConfiguracionApp = configuracion
+        self._servicio_logs: Optional[Any] = servicio_logs
 
     def procesar_peticion(self, peticion: PeticionIA) -> Dict[str, Any]:
         """Procesa una PeticionIA conectándose al endpoint configurado o aplicando fallback.
@@ -34,9 +35,13 @@ class ServicioClienteIA:
             try:
                 resultado = self._llamar_gemini_api(peticion.codigo, api_key)
                 peticion.marcar_completado(resultado)
+                if self._servicio_logs:
+                    self._servicio_logs.registrar_info("ServicioClienteIA", f"Análisis completado satisfactoriamente con Gemini (Online) para '{peticion.nombre_archivo or 'archivo'}'.")
                 return resultado
             except Exception as e:
                 # Fallback inteligente ante errores de red o cuota en la defensa
+                if self._servicio_logs:
+                    self._servicio_logs.registrar_error("ServicioClienteIA", f"Error de conexión con Gemini ({str(e)}). Activando modo seguro offline.")
                 resultado_fallback = self._analisis_estatico_local(
                     peticion.codigo,
                     nota=f"Conexión con Gemini no disponible ({str(e)}). Activado modo seguro offline.",

@@ -13,8 +13,9 @@ class ServicioArchivos:
     en la ruta configurada cada vez que se crea o modifica un archivo.
     """
 
-    def __init__(self, contexto: ContextoApp) -> None:
+    def __init__(self, contexto: ContextoApp, servicio_logs: Optional[Any] = None) -> None:
         self._contexto: ContextoApp = contexto
+        self._servicio_logs: Optional[Any] = servicio_logs
 
     def crear_archivo(self, nombre: str, contenido_inicial: str = "") -> ArchivoCodigo:
         """Crea un nuevo archivo en memoria, lo añade a la lista y genera un respaldo en disco.
@@ -101,8 +102,13 @@ class ServicioArchivos:
 
         ruta_destino = os.path.join(directorio_respaldo, objetivo.nombre)
         try:
+            os.makedirs(os.path.dirname(ruta_destino), exist_ok=True)
             with open(ruta_destino, "w", encoding="utf-8") as f:
                 f.write(objetivo.contenido)
+            if self._servicio_logs:
+                self._servicio_logs.registrar_info("ServicioArchivos", f"Respaldo generado exitosamente: '{ruta_destino}'")
             return ruta_destino
-        except OSError:
+        except OSError as e:
+            if self._servicio_logs:
+                self._servicio_logs.registrar_error("ServicioArchivos", f"Error al generar respaldo de '{objetivo.nombre}': {str(e)}")
             return None
