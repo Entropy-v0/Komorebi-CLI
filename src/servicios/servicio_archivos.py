@@ -28,6 +28,13 @@ class ServicioArchivos:
         if self._contexto.buscar_archivo(nombre_limpio) is not None:
             raise ValueError(f"Ya existe un archivo abierto con el nombre '{nombre_limpio}'.")
 
+        if not contenido_inicial and os.path.isfile(nombre_limpio):
+            try:
+                with open(nombre_limpio, "r", encoding="utf-8") as f:
+                    contenido_inicial = f.read()
+            except OSError:
+                pass
+
         nuevo_archivo = ArchivoCodigo(nombre_limpio, contenido_inicial)
         self._contexto.abrir_archivo(nuevo_archivo)
         self.guardar_respaldo(nuevo_archivo)
