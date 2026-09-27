@@ -33,6 +33,7 @@ class ServicioConfiguracion:
         Si el archivo no existe o está corrupto, carga la configuración por defecto
         y asegura la creación de las carpetas locales requeridas.
         """
+        self._cargar_variables_entorno_desde_dotenv()
         if ruta_archivo:
             self._ruta_archivo_config = ruta_archivo
 
@@ -66,3 +67,24 @@ class ServicioConfiguracion:
         for ruta in [self._configuracion_actual.ruta_respaldos, self._configuracion_actual.ruta_logs]:
             if ruta and not os.path.exists(ruta):
                 os.makedirs(ruta, exist_ok=True)
+
+    def _cargar_variables_entorno_desde_dotenv(self) -> None:
+        """Carga variables desde el archivo .env si existe en el entorno local."""
+        candidatos = [
+            os.path.join(os.getcwd(), ".env"),
+            os.path.join(os.path.dirname(os.path.abspath(self._ruta_archivo_config)), ".env"),
+        ]
+        for ruta_env in candidatos:
+            if os.path.exists(ruta_env):
+                try:
+                    with open(ruta_env, "r", encoding="utf-8") as f:
+                        for linea in f:
+                            linea_limpia = linea.strip()
+                            if linea_limpia and not linea_limpia.startswith("#") and "=" in linea_limpia:
+                                clave, valor = linea_limpia.split("=", 1)
+                                clave = clave.strip()
+                                valor = valor.strip().strip('"').strip("'")
+                                os.environ[clave] = valor
+                    break
+                except OSError:
+                    pass

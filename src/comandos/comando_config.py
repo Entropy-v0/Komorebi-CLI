@@ -32,6 +32,7 @@ class ComandoConfig(ComandoBase):
         print(f"  - Ruta Respaldos:    {cfg.ruta_respaldos}")
         print(f"  - Ruta Logs:         {cfg.ruta_logs}")
         print(f"  - Proveedor IA:      {cfg.proveedor_ia} ({cfg.modelo_ia})")
+        print(f"  - API Key IA:        {cfg.api_key_enmascarada}")
         print(f"  - URL Completa IA:   {cfg.url_completa_ia}")
         print(f"  - Timeout Ejecución: {cfg.tiempo_maximo_ejecucion}s")
         return True

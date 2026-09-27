@@ -13,8 +13,8 @@ class TestConfiguracionApp(unittest.TestCase):
         self.assertEqual(cfg.ruta_logs, "logs")
         self.assertEqual(cfg.tiempo_maximo_ejecucion, 15)
         self.assertEqual(cfg.proveedor_ia, "gemini")
-        self.assertEqual(cfg.modelo_ia, "gemini-1.5-flash")
-        self.assertIn("gemini-1.5-flash:generateContent", cfg.url_completa_ia)
+        self.assertEqual(cfg.modelo_ia, "gemini-3.8-flash")
+        self.assertIn("gemini-3.8-flash:generateContent", cfg.url_completa_ia)
         self.assertEqual(cfg.validar(), [])
 
     def test_desde_diccionario_anidado(self) -> None:

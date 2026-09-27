@@ -6,8 +6,8 @@
   },
   "ia": {
     "proveedor": "gemini",
-    "modelo": "gemini-1.5-flash",
-    "api_key": "",
+    "modelo": "gemini-3.8-flash",
+    "api_key": "${GEMINI_API_KEY}",
     "url_base": "https://generativelanguage.googleapis.com/v1beta/models",
     "endpoint_analisis": "/analizar",
     "timeout_segundos": 15

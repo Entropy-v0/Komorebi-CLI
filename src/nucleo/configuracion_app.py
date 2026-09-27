@@ -21,8 +21,8 @@ class ConfiguracionApp:
         nombre_app: str = "Komorebi Mini IDE",
         puerto: int = 8000,
         proveedor_ia: str = "gemini",
-        modelo_ia: str = "gemini-1.5-flash",
-        api_key_ia: str = "",
+        modelo_ia: str = "gemini-3.8-flash",
+        api_key_ia: Optional[str] = None,
     ) -> None:
         self._ruta_respaldos: str = ruta_respaldos
         self._ruta_logs: str = ruta_logs
@@ -33,7 +33,13 @@ class ConfiguracionApp:
         self._puerto: int = puerto
         self._proveedor_ia: str = proveedor_ia
         self._modelo_ia: str = modelo_ia
-        self._api_key_ia: str = api_key_ia or os.environ.get("GEMINI_API_KEY", "")
+        if api_key_ia is None:
+            self._api_key_ia: str = os.environ.get("GEMINI_API_KEY", "")
+        elif isinstance(api_key_ia, str) and api_key_ia.startswith("${") and api_key_ia.endswith("}"):
+            nombre_var = api_key_ia[2:-1].strip()
+            self._api_key_ia: str = os.environ.get(nombre_var, "")
+        else:
+            self._api_key_ia: str = api_key_ia
 
     @property
     def ruta_respaldos(self) -> str:
@@ -68,7 +74,20 @@ class ConfiguracionApp:
     @property
     def api_key_ia(self) -> str:
         """Retorna la clave de API para la llamada a la IA (si está configurada)."""
-        return self._api_key_ia or os.environ.get("GEMINI_API_KEY", "")
+        if self._api_key_ia.startswith("${") and self._api_key_ia.endswith("}"):
+            nombre_var = self._api_key_ia[2:-1].strip()
+            return os.environ.get(nombre_var, "")
+        return self._api_key_ia
+
+    @property
+    def api_key_enmascarada(self) -> str:
+        """Retorna una versión enmascarada de la API key para visualización segura en la consola."""
+        key = self.api_key_ia
+        if not key:
+            return "[No configurada / Modo Offline]"
+        if len(key) <= 8:
+            return "******** (cargada desde .env)"
+        return f"{key[:6]}...{key[-4:]} (cargada desde .env)"
 
     @property
     def url_completa_ia(self) -> str:
@@ -113,8 +132,9 @@ class ConfiguracionApp:
         endpoint_analisis = ia.get("endpoint_analisis", datos.get("endpoint_analisis", "/analizar"))
         tiempo_max = ia.get("timeout_segundos", datos.get("tiempo_maximo_ejecucion", 15))
         proveedor_ia = ia.get("proveedor", datos.get("proveedor_ia", "gemini"))
-        modelo_ia = ia.get("modelo", datos.get("modelo_ia", "gemini-1.5-flash"))
-        api_key_ia = ia.get("api_key", datos.get("api_key_ia", ""))
+        modelo_ia = ia.get("modelo", datos.get("modelo_ia", "gemini-3.8-flash"))
+        api_key_raw = ia.get("api_key", datos.get("api_key_ia", None))
+        api_key_ia = None if api_key_raw == "" else api_key_raw
         nombre_app = datos.get("nombre_app", "Komorebi Mini IDE")
         puerto = servidor.get("puerto", datos.get("puerto", 8000))
 
