@@ -12,7 +12,9 @@ class TestConfiguracionApp(unittest.TestCase):
         self.assertEqual(cfg.ruta_respaldos, "respaldos")
         self.assertEqual(cfg.ruta_logs, "logs")
         self.assertEqual(cfg.tiempo_maximo_ejecucion, 15)
-        self.assertEqual(cfg.url_completa_ia, "http://localhost:8000/api/ia/analizar")
+        self.assertEqual(cfg.proveedor_ia, "gemini")
+        self.assertEqual(cfg.modelo_ia, "gemini-1.5-flash")
+        self.assertIn("gemini-1.5-flash:generateContent", cfg.url_completa_ia)
         self.assertEqual(cfg.validar(), [])
 
     def test_desde_diccionario_anidado(self) -> None:
@@ -20,6 +22,7 @@ class TestConfiguracionApp(unittest.TestCase):
             "nombre_app": "Komorebi Test",
             "rutas": {"respaldos": "backups", "logs": "error_logs"},
             "ia": {
+                "proveedor": "generico",
                 "url_base": "https://api.ia.com",
                 "endpoint_analisis": "/v1/check",
                 "timeout_segundos": 30,
