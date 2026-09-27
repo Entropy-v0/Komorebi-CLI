@@ -179,6 +179,7 @@ python3 -m unittest discover -s test -p "test_*.py" -v
 
 El repositorio cuenta con guías técnicas exhaustivas en la carpeta `docs/`:
 
+* **[Guía Maestra para la Defensa Académica (`docs/guia_defensa.md`)](file:///home/entropy/Olimpo/Proyectos/Komorebi/docs/guia_defensa.md):** Guion de presentación en vivo (5-7 min), respuestas a preguntas trampa del jurado, justificación de complejidades y demo paso a paso.
 * **[Manual de Usuario y Guía Práctica (`docs/guia_de_uso.md`)](file:///home/entropy/Olimpo/Proyectos/Komorebi/docs/guia_de_uso.md):** Tutorial interactivo paso a paso, ejemplos de comandos, gestión de archivos y análisis con IA.
 * **[Guía Conceptual de Estructuras de Datos (`docs/guia_estructuras_datos.md`)](file:///home/entropy/Olimpo/Proyectos/Komorebi/docs/guia_estructuras_datos.md):** Explicación teórica profunda de punteros, justificación de diseño de cada estructura y análisis formal de complejidad temporal y espacial ($Big\ O$).
 * **[Auditoría de Aprendizaje e Integración Ética de IA (`docs/auditoria_aprendizaje_ia.md`)](file:///home/entropy/Olimpo/Proyectos/Komorebi/docs/auditoria_aprendizaje_ia.md):** Reflexión sobre el rol de la IA en la ingeniería de software y las 3 reglas de oro para defender el código.
