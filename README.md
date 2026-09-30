@@ -170,5 +170,3 @@ python3 -m unittest discover -s test -p "test_*.py" -v
   }
 }
 ```
-
-> **Nota para la Defensa:** Si no se especifica una `api_key` o no hay conexión a internet durante la presentación, el sistema activa automáticamente su **Modo Offline Fallback**, realizando un análisis estático de complejidad local sin fallar ni congelar la aplicación.
