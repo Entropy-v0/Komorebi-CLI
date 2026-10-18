@@ -11,6 +11,7 @@ from src.servicios.servicio_archivos import ServicioArchivos
 from src.servicios.servicio_workspace import ServicioWorkspace
 from src.servicios.servicio_expresiones import ServicioExpresiones
 from src.servicios.servicio_diccionario import ServicioDiccionario
+from src.servicios.servicio_indexacion import ServicioIndexacion
 from src.servicios.servicio_sintaxis import ServicioSintaxis
 from src.servicios.servicio_historial import ServicioHistorial
 from src.servicios.servicio_diagnosticos import ServicioDiagnosticos
@@ -44,6 +45,8 @@ from src.comandos.comando_eval import ComandoEval
 from src.comandos.comando_add_keyword import ComandoAddKeyword
 from src.comandos.comando_suggest import ComandoSuggest
 from src.comandos.comando_remove_keyword import ComandoRemoveKeyword
+from src.comandos.comando_index_all import ComandoIndexAll
+from src.comandos.comando_find_global import ComandoFindGlobal
 
 from src.cli.consola_app import ConsolaApp
 
@@ -67,6 +70,8 @@ def bootstrap(ruta_config: str = "config.json") -> ConsolaApp:
     servicio_workspace = ServicioWorkspace(contexto, servicio_archivos, servicio_logs)
     servicio_expresiones = ServicioExpresiones()
     servicio_diccionario = ServicioDiccionario(contexto, servicio_logs)
+    servicio_indexacion = ServicioIndexacion(contexto, servicio_logs)
+    servicio_archivos.servicio_indexacion = servicio_indexacion
     servicio_sintaxis = ServicioSintaxis()
     servicio_historial = ServicioHistorial()
     servicio_diagnosticos = ServicioDiagnosticos()
@@ -100,6 +105,8 @@ def bootstrap(ruta_config: str = "config.json") -> ConsolaApp:
     invocador.registrar_comando(ComandoAddKeyword(servicio_diccionario))
     invocador.registrar_comando(ComandoSuggest(servicio_diccionario))
     invocador.registrar_comando(ComandoRemoveKeyword(servicio_diccionario))
+    invocador.registrar_comando(ComandoIndexAll(servicio_indexacion))
+    invocador.registrar_comando(ComandoFindGlobal(servicio_indexacion))
 
     # 5. Creación de la consola interactiva CLI
     return ConsolaApp(invocador, contexto, servicio_logs=servicio_logs)

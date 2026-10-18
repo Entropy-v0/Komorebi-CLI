@@ -19,9 +19,25 @@ class ServicioArchivos:
     ArchivoCodigo y que los respaldos físicos reflejen la jerarquía de directorios.
     """
 
-    def __init__(self, contexto: ContextoApp, servicio_logs: Optional[Any] = None) -> None:
+    def __init__(
+        self,
+        contexto: ContextoApp,
+        servicio_logs: Optional[Any] = None,
+        servicio_indexacion: Optional[Any] = None,
+    ) -> None:
         self._contexto: ContextoApp = contexto
         self._servicio_logs: Optional[Any] = servicio_logs
+        self._servicio_indexacion: Optional[Any] = servicio_indexacion
+
+    @property
+    def servicio_indexacion(self) -> Optional[Any]:
+        """Retorna el servicio de indexación vinculado, si existe."""
+        return self._servicio_indexacion
+
+    @servicio_indexacion.setter
+    def servicio_indexacion(self, servicio: Optional[Any]) -> None:
+        """Vincula el servicio de indexación para refresco automático tras ediciones."""
+        self._servicio_indexacion = servicio
 
     def crear_archivo(self, nombre: str, contenido_inicial: str = "") -> ArchivoCodigo:
         """Crea un nuevo archivo en el directorio actual (o ruta), lo añade a la lista y respalda en disco.
@@ -264,6 +280,9 @@ class ServicioArchivos:
         objetivo = archivo or self._contexto.archivo_activo
         if objetivo is None:
             return None
+
+        if self._servicio_indexacion is not None:
+            self._servicio_indexacion.reindexar_archivo(objetivo)
 
         directorio_respaldo = self._contexto.configuracion.ruta_respaldos
         if not os.path.exists(directorio_respaldo):

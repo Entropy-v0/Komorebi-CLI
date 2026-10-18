@@ -157,6 +157,11 @@ class ContextoApp:
         if not eliminado:
             return False
 
+        if self._indice_global is not None and hasattr(
+            self._indice_global, "eliminar_referencias_archivo"
+        ):
+            self._indice_global.eliminar_referencias_archivo(id_archivo)
+
         if self._archivo_activo is not None and self._archivo_activo.id_archivo == id_archivo:
             if not self._archivos_abiertos.esta_vacia():
                 primer_nodo = self._archivos_abiertos.cabeza

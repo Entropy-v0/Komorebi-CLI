@@ -117,7 +117,8 @@ class ServicioDiccionario:
         nodo = self.arbol.insertar(palabra, desc_final)
         if self._servicio_logs is not None:
             self._servicio_logs.registrar_info(
-                f"Diccionario AVL: palabra '{nodo.palabra}' insertada (altura={self.arbol.altura})."
+                "ServicioDiccionario",
+                f"Palabra '{nodo.palabra}' insertada (altura={self.arbol.altura}).",
             )
         return nodo
 
@@ -133,7 +134,8 @@ class ServicioDiccionario:
         eliminado = self.arbol.eliminar(palabra)
         if eliminado and self._servicio_logs is not None:
             self._servicio_logs.registrar_info(
-                f"Diccionario AVL: palabra '{palabra.strip()}' eliminada (altura={self.arbol.altura})."
+                "ServicioDiccionario",
+                f"Palabra '{palabra.strip()}' eliminada (altura={self.arbol.altura}).",
             )
         return eliminado
 
