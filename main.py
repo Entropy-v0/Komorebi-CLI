@@ -9,6 +9,7 @@ from src.nucleo.contexto_app import ContextoApp
 from src.servicios.servicio_configuracion import ServicioConfiguracion
 from src.servicios.servicio_archivos import ServicioArchivos
 from src.servicios.servicio_workspace import ServicioWorkspace
+from src.servicios.servicio_expresiones import ServicioExpresiones
 from src.servicios.servicio_sintaxis import ServicioSintaxis
 from src.servicios.servicio_historial import ServicioHistorial
 from src.servicios.servicio_diagnosticos import ServicioDiagnosticos
@@ -38,6 +39,7 @@ from src.comandos.comando_pwd import ComandoPwd
 from src.comandos.comando_ls import ComandoLs
 from src.comandos.comando_tree import ComandoTree
 from src.comandos.comando_mv import ComandoMv
+from src.comandos.comando_eval import ComandoEval
 
 from src.cli.consola_app import ConsolaApp
 
@@ -59,6 +61,7 @@ def bootstrap(ruta_config: str = "config.json") -> ConsolaApp:
     servicio_logs = ServicioLogs(configuracion.ruta_logs)
     servicio_archivos = ServicioArchivos(contexto, servicio_logs)
     servicio_workspace = ServicioWorkspace(contexto, servicio_archivos, servicio_logs)
+    servicio_expresiones = ServicioExpresiones()
     servicio_sintaxis = ServicioSintaxis()
     servicio_historial = ServicioHistorial()
     servicio_diagnosticos = ServicioDiagnosticos()
@@ -88,6 +91,7 @@ def bootstrap(ruta_config: str = "config.json") -> ConsolaApp:
     invocador.registrar_comando(ComandoLs(servicio_workspace))
     invocador.registrar_comando(ComandoTree(servicio_workspace))
     invocador.registrar_comando(ComandoMv(servicio_workspace))
+    invocador.registrar_comando(ComandoEval(servicio_expresiones, contexto))
 
     # 5. Creación de la consola interactiva CLI
     return ConsolaApp(invocador, contexto, servicio_logs=servicio_logs)
