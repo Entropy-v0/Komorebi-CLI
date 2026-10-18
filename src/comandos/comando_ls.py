@@ -2,29 +2,36 @@
 
 from typing import List
 from src.comandos.comando_base import ComandoBase
-from src.servicios.servicio_workspace import ServicioWorkspace
+from src.servicios.servicio_navegacion import ServicioNavegacion
 
 
 class ComandoLs(ComandoBase):
-    """Comando para listar los elementos hijos del directorio actual o de una ruta."""
+    """Comando para listar el contenido de un directorio real o del Workspace virtual."""
 
-    def __init__(self, servicio_workspace: ServicioWorkspace) -> None:
+    FLAGS_OCULTOS = ("-a", "-A", "--all")
+
+    def __init__(self, servicio_navegacion: ServicioNavegacion) -> None:
         super().__init__(
             nombre="ls",
-            descripcion="Lista las carpetas y archivos contenidos en el directorio actual o ruta.",
-            sintaxis="ls [ruta]",
+            descripcion=(
+                "Lista el contenido del directorio actual o de una ruta "
+                "('-a' muestra ocultos; 'ws:ruta' lista el Workspace)."
+            ),
+            sintaxis="ls [-a] [ruta | ws:ruta]",
         )
-        self._servicio_workspace: ServicioWorkspace = servicio_workspace
+        self._servicio_navegacion: ServicioNavegacion = servicio_navegacion
 
     def ejecutar(self, argumentos: List[str]) -> bool:
-        ruta = argumentos[0].strip() if argumentos else None
-        elementos = self._servicio_workspace.listar_directorio(ruta)
+        mostrar_ocultos = any(arg in self.FLAGS_OCULTOS for arg in argumentos)
+        partes_ruta = [arg for arg in argumentos if arg not in self.FLAGS_OCULTOS]
+        ruta = " ".join(partes_ruta).strip() or None
+
+        elementos = self._servicio_navegacion.listar(ruta, mostrar_ocultos)
         if not elementos:
             print("(Directorio vacío)")
             return True
 
-        for nodo in elementos:
-            etiqueta = f"{nodo.nombre}/" if nodo.es_carpeta else nodo.nombre
+        for nombre, es_directorio in elementos:
+            etiqueta = f"{nombre}/" if es_directorio else nombre
             print(f"  {etiqueta}")
         return True
-

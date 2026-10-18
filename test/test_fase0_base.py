@@ -20,6 +20,7 @@ from src.excepciones import (
 )
 from src.nucleo.contexto_app import ContextoApp
 from src.nucleo.referencia_token import ReferenciaToken
+from src.servicios.servicio_navegacion import ServicioNavegacion
 from src.servicios.servicio_workspace import ServicioWorkspace
 
 
@@ -71,7 +72,7 @@ class TestFase0Base(unittest.TestCase):
     def test_consola_captura_error_synthetix_y_muestra_mensaje(self) -> None:
         contexto = ContextoApp()
         invocador = InvocadorComandos()
-        invocador.registrar_comando(ComandoCd(ServicioWorkspace(contexto)))
+        invocador.registrar_comando(ComandoCd(ServicioNavegacion(contexto, ServicioWorkspace(contexto))))
         consola = ConsolaApp(invocador, contexto)
 
         buffer_salida = io.StringIO()

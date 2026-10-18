@@ -9,6 +9,7 @@ from src.nucleo.contexto_app import ContextoApp
 from src.servicios.servicio_configuracion import ServicioConfiguracion
 from src.servicios.servicio_archivos import ServicioArchivos
 from src.servicios.servicio_workspace import ServicioWorkspace
+from src.servicios.servicio_navegacion import ServicioNavegacion
 from src.servicios.servicio_expresiones import ServicioExpresiones
 from src.servicios.servicio_diccionario import ServicioDiccionario
 from src.servicios.servicio_indexacion import ServicioIndexacion
@@ -34,6 +35,7 @@ from src.comandos.comando_analyze import ComandoAnalyze
 from src.comandos.comando_edit import ComandoEdit
 from src.comandos.comando_show import ComandoShow
 from src.comandos.comando_help import ComandoHelp
+from src.comandos.comando_clear import ComandoClear
 from src.comandos.comando_exit import ComandoExit
 from src.comandos.comando_mkdir import ComandoMkdir
 from src.comandos.comando_cd import ComandoCd
@@ -68,6 +70,7 @@ def bootstrap(ruta_config: str = "config.json") -> ConsolaApp:
     servicio_logs = ServicioLogs(configuracion.ruta_logs)
     servicio_archivos = ServicioArchivos(contexto, servicio_logs)
     servicio_workspace = ServicioWorkspace(contexto, servicio_archivos, servicio_logs)
+    servicio_navegacion = ServicioNavegacion(contexto, servicio_workspace, iniciar_en_sistema_real=True)
     servicio_expresiones = ServicioExpresiones()
     servicio_diccionario = ServicioDiccionario(contexto, servicio_logs)
     servicio_indexacion = ServicioIndexacion(contexto, servicio_logs)
@@ -94,11 +97,12 @@ def bootstrap(ruta_config: str = "config.json") -> ConsolaApp:
     invocador.registrar_comando(ComandoEdit(servicio_historial, servicio_archivos, contexto))
     invocador.registrar_comando(ComandoShow(contexto))
     invocador.registrar_comando(ComandoHelp(invocador))
+    invocador.registrar_comando(ComandoClear())
     invocador.registrar_comando(ComandoExit())
     invocador.registrar_comando(ComandoMkdir(servicio_workspace))
-    invocador.registrar_comando(ComandoCd(servicio_workspace))
-    invocador.registrar_comando(ComandoPwd(servicio_workspace))
-    invocador.registrar_comando(ComandoLs(servicio_workspace))
+    invocador.registrar_comando(ComandoCd(servicio_navegacion))
+    invocador.registrar_comando(ComandoPwd(servicio_navegacion))
+    invocador.registrar_comando(ComandoLs(servicio_navegacion))
     invocador.registrar_comando(ComandoTree(servicio_workspace))
     invocador.registrar_comando(ComandoMv(servicio_workspace))
     invocador.registrar_comando(ComandoEval(servicio_expresiones, contexto))

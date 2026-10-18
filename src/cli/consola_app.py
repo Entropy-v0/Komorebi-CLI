@@ -39,7 +39,15 @@ class ConsolaApp:
         return self._contexto
 
     def generar_prompt(self) -> str:
-        """Genera el texto del prompt dinámico según la ruta actual del workspace o archivo activo."""
+        """Genera el texto del prompt dinámico según la ubicación actual o archivo activo.
+
+        Modo SO real: muestra la ruta real. Modo Workspace híbrido: muestra `ws:/ruta`.
+        Sin modo de navegación definido: conserva el comportamiento histórico.
+        """
+        modo = self._contexto.modo_navegacion
+        if modo == ContextoApp.MODO_REAL and self._contexto.ubicacion_real is not None:
+            return f"Komorebi [{self._contexto.ubicacion_real}]> "
+
         dir_actual = self._contexto.directorio_actual
         if dir_actual is not None:
             ruta = (
@@ -47,7 +55,8 @@ class ConsolaApp:
                 if hasattr(dir_actual, "obtener_ruta_absoluta")
                 else str(dir_actual)
             )
-            return f"Komorebi [{ruta}]> "
+            prefijo = "ws:" if modo == ContextoApp.MODO_WORKSPACE else ""
+            return f"Komorebi [{prefijo}{ruta}]> "
 
         archivo_activo = self._contexto.archivo_activo
         nombre_mostrado = archivo_activo.nombre if archivo_activo else "sin-archivo"

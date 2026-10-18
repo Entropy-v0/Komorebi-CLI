@@ -25,6 +25,7 @@ from src.nucleo.archivo_codigo import ArchivoCodigo
 from src.nucleo.configuracion_app import ConfiguracionApp
 from src.nucleo.contexto_app import ContextoApp
 from src.servicios.servicio_archivos import ServicioArchivos
+from src.servicios.servicio_navegacion import ServicioNavegacion
 from src.servicios.servicio_workspace import ServicioWorkspace
 
 
@@ -38,15 +39,17 @@ class TestArbolNarioWorkspace(unittest.TestCase):
         self.serv_archivos = ServicioArchivos(self.contexto)
         self.serv_workspace = ServicioWorkspace(self.contexto, self.serv_archivos)
 
+        self.serv_navegacion = ServicioNavegacion(self.contexto, self.serv_workspace)
+
         self.invocador = InvocadorComandos()
         self.invocador.registrar_comando(ComandoNew(self.serv_archivos))
         self.invocador.registrar_comando(ComandoList(self.serv_archivos))
         self.invocador.registrar_comando(ComandoSwitch(self.serv_archivos))
         self.invocador.registrar_comando(ComandoDelete(self.serv_archivos))
         self.invocador.registrar_comando(ComandoMkdir(self.serv_workspace))
-        self.invocador.registrar_comando(ComandoCd(self.serv_workspace))
-        self.invocador.registrar_comando(ComandoPwd(self.serv_workspace))
-        self.invocador.registrar_comando(ComandoLs(self.serv_workspace))
+        self.invocador.registrar_comando(ComandoCd(self.serv_navegacion))
+        self.invocador.registrar_comando(ComandoPwd(self.serv_navegacion))
+        self.invocador.registrar_comando(ComandoLs(self.serv_navegacion))
         self.invocador.registrar_comando(ComandoTree(self.serv_workspace))
         self.invocador.registrar_comando(ComandoMv(self.serv_workspace))
         self.consola = ConsolaApp(self.invocador, self.contexto)
@@ -136,7 +139,7 @@ class TestArbolNarioWorkspace(unittest.TestCase):
     def test_sincronia_arbol_lista_y_disco_con_mv_y_delete(self) -> None:
         self.assertTrue(self.consola.ejecutar_linea("mkdir src"))
         self.assertTrue(self.consola.ejecutar_linea("mkdir lib"))
-        self.assertTrue(self.consola.ejecutar_linea("cd src"))
+        self.assertTrue(self.consola.ejecutar_linea("cd ws:/src"))
         self.assertTrue(self.consola.ejecutar_linea("new app.py print('hola')"))
 
         # Verificar que el objeto ArchivoCodigo en ListaEnlazada y en ArbolNario es EL MISMO (idéntica referencia)

@@ -23,6 +23,8 @@ class InvocadorComandos:
     def obtener_comando(self, nombre: str) -> Optional[ComandoBase]:
         """Recupera la instancia de comando asociada a la palabra clave dada."""
         clave = nombre.strip().lower()
+        if clave == "cls" and "cls" not in self._comandos:
+            clave = "clear"
         return self._comandos.get(clave)
 
     def ejecutar_comando(self, nombre: str, argumentos: List[str]) -> bool:

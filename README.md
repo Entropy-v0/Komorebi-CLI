@@ -77,9 +77,9 @@ La aplicación interactúa mediante un prompt dinámico (`Komorebi [/ruta]> `), 
 | Comando | Sintaxis | Descripción |
 | :--- | :--- | :--- |
 | `mkdir` | `mkdir <ruta>` | Crea un nuevo directorio en el árbol N-ario del Workspace. |
-| `cd` | `cd [ruta]` | Cambia el directorio actual soportando rutas absolutas, relativas, `.` y `..`. |
-| `pwd` | `pwd` | Muestra la ruta absoluta del directorio de trabajo actual. |
-| `ls` | `ls [ruta]` | Lista los archivos y subcarpetas directos del directorio indicado. |
+| `cd` | `cd [ruta \| ws:ruta \| -]` | Navega libremente por el **sistema de archivos real** (absolutas, relativas, `~`, `..`, `-`; sin argumento va a `~`). Con el prefijo `ws:` (o `@ws`) entra al Workspace virtual: `cd ws:/src`. |
+| `pwd` | `pwd` | Muestra la ruta actual: real, o `ws:/ruta` cuando se está en el Workspace virtual. |
+| `ls` | `ls [-a] [ruta \| ws:ruta]` | Lista el contenido del directorio actual o indicado (orden alfabético; `-a` incluye ocultos). Usa `ws:` para listar el Workspace virtual. |
 | `tree` | `tree [ruta]` | Dibuja la jerarquía del Workspace mediante recorrido preorden iterativo con `Pila`. |
 | `mv` | `mv <origen> <destino>` | Mueve o renombra un archivo o carpeta previniendo ciclos jerárquicos. |
 | `new` | `new <nombre> [contenido]` | Crea un archivo en el directorio actual, lo abre en la sesión y guarda respaldo físico. |
@@ -88,6 +88,8 @@ La aplicación interactúa mediante un prompt dinámico (`Komorebi [/ruta]> `), 
 | `delete` | `delete <nombre_o_ruta>` | Elimina un archivo o carpeta del árbol N-ario, la lista enlazada, el índice B-Tree y el disco. |
 | `edit` | `edit <linea_de_codigo>` | Agrega una línea de código al archivo activo registrando historial Undo/Redo. |
 | `show` | `show` | Imprime el contenido numerado del archivo activo. |
+
+> **Nota:** `mkdir`, `tree`, `mv`, `new`, `delete`, `index-all` y `find-global` operan siempre sobre el Workspace virtual (rutas como `/src/app.py`), sin importar si el prompt muestra una ruta real o `ws:`. El prompt indica la ubicación activa: `Komorebi [/home/usuario]>` (SO real) o `Komorebi [ws:/src]>` (Workspace).
 
 ### Evaluación Aritmética Exacta (Árbol Binario de Expresiones)
 | Comando | Sintaxis | Descripción |
@@ -117,6 +119,7 @@ La aplicación interactúa mediante un prompt dinámico (`Komorebi [/ruta]> `), 
 | `queue-status` | `queue-status` | Muestra el estado de la cola FIFO de peticiones de IA. |
 | `analyze` | `analyze` | Encola y despacha el análisis de complejidad algorítmica asistido por IA. |
 | `config` | `config [ruta_json]` | Muestra o recarga la configuración externa del sistema. |
+| `clear` | `clear` (o `cls`) | Limpia la pantalla de la terminal interactiva. |
 | `help` | `help` | Muestra el listado completo de comandos disponibles y su sintaxis. |
 | `exit` | `exit` | Finaliza de forma segura la sesión del Mini IDE. |
 
@@ -134,7 +137,7 @@ python3 main.py
 ```
 
 ### Ejecución de la Suite de Pruebas Unitarias e Integración
-El proyecto cuenta con **133 pruebas automatizadas** (unitarias + integración E2E + auditoría arquitectónica):
+El proyecto cuenta con **140 pruebas automatizadas** (unitarias + integración E2E + auditoría arquitectónica):
 ```bash
 python3 -m unittest discover -s test -p "test_*.py" -v
 ```

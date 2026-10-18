@@ -57,11 +57,13 @@ Komorebi/
 │   │   ├── comando_remove_keyword.py        # Elimina una palabra clave del Árbol AVL con rebalanceo
 │   │   ├── comando_index_all.py             # Indexa todos los identificadores del Workspace en el Árbol B
 │   │   ├── comando_find_global.py           # Busca un identificador en el índice global Árbol B
-│   │   ├── comando_help.py                  # Genera dinámicamente la tabla de ayuda de los 27 comandos
+│   │   ├── comando_clear.py                 # Limpia la pantalla de la terminal interactiva (clear / cls)
+│   │   ├── comando_help.py                  # Genera dinámicamente la tabla de ayuda de los comandos
 │   │   └── comando_exit.py                  # Señaliza el cierre limpio del bucle REPL
 │   ├── servicios/                           # Capa de Dominio / Lógica de Negocio (Receptores)
 │   │   ├── servicio_archivos.py             # Coordina ListaEnlazada, ArbolNario, ArbolB y respaldos en disco
 │   │   ├── servicio_workspace.py            # Orquesta operaciones jerárquicas del Workspace sobre ArbolNario
+│   │   ├── servicio_navegacion.py           # cd/ls/pwd híbridos: SO real (por defecto) y Workspace virtual (prefijo ws:)
 │   │   ├── servicio_expresiones.py          # Evalúa expresiones directas o líneas aritméticas del archivo activo
 │   │   ├── servicio_diccionario.py          # Gestiona el diccionario de keywords de Python sobre ArbolAVL
 │   │   ├── servicio_indexacion.py           # Tokenizador léxico propio e indexación global sobre ArbolB
@@ -206,6 +208,6 @@ flowchart TD
 ## 5. Flujo de Ejecución (Data Flow)
 
 ### Caso A: Creación, Movimiento e Indexación Global (`mkdir`, `new`, `index-all`, `mv`, `find-global`)
-1. **Creación jerárquica:** Al ejecutar `mkdir src`, `cd src` y `new app.py`, `ServicioWorkspace` y `ServicioArchivos` crean el nodo carpeta `/src` y el nodo archivo `/src/app.py` en el `ArbolNario`, insertan la **misma instancia** `ArchivoCodigo` (con `id_archivo` inmutable `file-xxxxxxxx`) en `ContextoApp.archivos_abiertos` (`ListaEnlazada`), y escriben `respaldos/src/app.py`.
+1. **Creación jerárquica:** Al ejecutar `mkdir src`, `cd ws:/src` y `new app.py`, `ServicioWorkspace` y `ServicioArchivos` crean el nodo carpeta `/src` y el nodo archivo `/src/app.py` en el `ArbolNario`, insertan la **misma instancia** `ArchivoCodigo` (con `id_archivo` inmutable `file-xxxxxxxx`) en `ContextoApp.archivos_abiertos` (`ListaEnlazada`), y escriben `respaldos/src/app.py`.
 2. **Indexación en Árbol B (`index-all`):** `ServicioIndexacion.indexar_todo()` recorre el `ArbolNario` usando una `Pila` explícita, extrae cada identificador con su tokenizador carácter por carácter, consulta `ContextoApp.diccionario.contiene(token)` en el `ArbolAVL` en $\mathcal{O}(\log n)$ para descartar palabras reservadas (`def`, `return`, `if`, etc.), e inserta `ReferenciaToken(id_archivo, linea)` en el `ArbolB` de orden $m=4$.
 3. **Movimiento sin invalidar referencias (`mv /src/app.py /core/app.py`):** `ArbolNario.mover()` verifica que no se forme un ciclo jerárquico, reasigna el puntero `padre` del `NodoNario` a `/core` y mueve el archivo físico en `respaldos/core/app.py`. Como `ReferenciaToken` almacena el `id_archivo` inmutable y no la ruta textual, al ejecutar `find-global <token>` inmediatamente después, `ServicioIndexacion` resuelve `id_archivo` contra el `ArbolNario` y muestra `/core/app.py`.

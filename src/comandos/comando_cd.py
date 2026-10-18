@@ -2,23 +2,25 @@
 
 from typing import List
 from src.comandos.comando_base import ComandoBase
-from src.servicios.servicio_workspace import ServicioWorkspace
+from src.servicios.servicio_navegacion import ServicioNavegacion
 
 
 class ComandoCd(ComandoBase):
-    """Comando para cambiar el directorio actual en el Árbol N-ario del Workspace."""
+    """Comando para cambiar de directorio en el sistema de archivos real o en el Workspace."""
 
-    def __init__(self, servicio_workspace: ServicioWorkspace) -> None:
+    def __init__(self, servicio_navegacion: ServicioNavegacion) -> None:
         super().__init__(
             nombre="cd",
-            descripcion="Cambia el directorio actual en el workspace (soporta '.', '..' y rutas).",
-            sintaxis="cd <ruta>",
+            descripcion=(
+                "Cambia de directorio en el SO (rutas, '~', '..', '-') "
+                "o en el Workspace virtual con el prefijo 'ws:'."
+            ),
+            sintaxis="cd [ruta | ws:ruta | -]",
         )
-        self._servicio_workspace: ServicioWorkspace = servicio_workspace
+        self._servicio_navegacion: ServicioNavegacion = servicio_navegacion
 
     def ejecutar(self, argumentos: List[str]) -> bool:
-        ruta = argumentos[0].strip() if argumentos else "/"
-        nodo = self._servicio_workspace.cambiar_directorio(ruta)
-        print(f"[Directorio] Ruta actual: {nodo.obtener_ruta_absoluta()}")
+        destino = " ".join(argumentos).strip()
+        ubicacion = self._servicio_navegacion.cambiar_directorio(destino)
+        print(f"[Directorio] Ruta actual: {ubicacion}")
         return True
-

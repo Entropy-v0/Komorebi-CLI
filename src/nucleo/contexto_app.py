@@ -16,7 +16,14 @@ class ContextoApp:
     la ColaFIFO de peticiones hacia la IA, la lista de diagnósticos estáticos generados,
     la configuración global activa y las estructuras jerárquicas de la Fase 2
     (workspace N-ario, directorio actual, diccionario AVL e índice global B-Tree).
+
+    También conserva el cursor de navegación sobre el sistema de archivos real del SO
+    (`ubicacion_real`) y el modo de navegación activo (`modo_navegacion`), que indica si
+    el prompt y los comandos `pwd`/`ls` apuntan al SO real o al Workspace virtual.
     """
+
+    MODO_REAL = "REAL"
+    MODO_WORKSPACE = "WORKSPACE"
 
     def __init__(self, configuracion: Optional[ConfiguracionApp] = None) -> None:
         self._archivos_abiertos: ListaEnlazada = ListaEnlazada()
@@ -28,6 +35,28 @@ class ContextoApp:
         self._directorio_actual: Optional[Any] = None
         self._diccionario: Optional[Any] = None
         self._indice_global: Optional[Any] = None
+        self._ubicacion_real: Optional[str] = None
+        self._modo_navegacion: Optional[str] = None
+
+    @property
+    def ubicacion_real(self) -> Optional[str]:
+        """Retorna la ruta absoluta del cursor de navegación sobre el sistema de archivos real."""
+        return self._ubicacion_real
+
+    @ubicacion_real.setter
+    def ubicacion_real(self, nueva_ruta: Optional[str]) -> None:
+        """Actualiza el cursor de navegación sobre el sistema de archivos real."""
+        self._ubicacion_real = nueva_ruta
+
+    @property
+    def modo_navegacion(self) -> Optional[str]:
+        """Retorna el modo de navegación activo (MODO_REAL, MODO_WORKSPACE o None si es heredado)."""
+        return self._modo_navegacion
+
+    @modo_navegacion.setter
+    def modo_navegacion(self, nuevo_modo: Optional[str]) -> None:
+        """Establece el modo de navegación activo."""
+        self._modo_navegacion = nuevo_modo
 
     @property
     def archivos_abiertos(self) -> ListaEnlazada:

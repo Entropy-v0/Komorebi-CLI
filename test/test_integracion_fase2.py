@@ -39,7 +39,7 @@ class TestIntegracionFase2(unittest.TestCase):
 
         comandos_repl = [
             "mkdir src",
-            "cd src",
+            "cd ws:/src",
             "pwd",
             "new app.py",
             'edit "def calcular(tasa_interes):"',
@@ -50,11 +50,13 @@ class TestIntegracionFase2(unittest.TestCase):
             "suggest st",
             "index-all",
             "find-global monto_final",
-            "cd /",
+            "cd ws:/",
             "mkdir core",
             "mv /src/app.py /core/app.py",
             "tree",
             "find-global monto_final",
+            "clear",
+            "cls",
             "help",
         ]
 
