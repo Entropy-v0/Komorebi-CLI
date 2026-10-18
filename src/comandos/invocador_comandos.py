@@ -2,6 +2,7 @@
 
 from typing import Dict, List, Optional
 from src.comandos.comando_base import ComandoBase
+from src.excepciones.error_synthetix import ErrorSynthetix
 
 
 class InvocadorComandos:
@@ -36,6 +37,9 @@ class InvocadorComandos:
 
         try:
             return comando.ejecutar(argumentos)
+        except ErrorSynthetix as e:
+            print(f"[Error] {e.mensaje}")
+            return False
         except Exception as e:
             print(f"[Error en '{nombre}'] {str(e)}")
             return False

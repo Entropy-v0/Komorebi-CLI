@@ -1,7 +1,8 @@
 """Módulo del servicio encargado de la gestión de archivos de código y respaldos en disco."""
 
 import os
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
+from src.excepciones.nombre_duplicado_error import NombreDuplicadoError
 from src.nucleo.archivo_codigo import ArchivoCodigo
 from src.nucleo.contexto_app import ContextoApp
 
@@ -20,14 +21,15 @@ class ServicioArchivos:
     def crear_archivo(self, nombre: str, contenido_inicial: str = "") -> ArchivoCodigo:
         """Crea un nuevo archivo en memoria, lo añade a la lista y genera un respaldo en disco.
         
-        Lanza ValueError si ya existe un archivo abierto con el mismo nombre.
+        Lanza NombreDuplicadoError (subclase de ErrorSynthetix y ValueError) si ya existe
+        un archivo con el mismo nombre en el mismo ámbito.
         """
         nombre_limpio = nombre.strip()
         if not nombre_limpio:
             raise ValueError("El nombre del archivo no puede estar vacío.")
 
         if self._contexto.buscar_archivo(nombre_limpio) is not None:
-            raise ValueError(f"Ya existe un archivo abierto con el nombre '{nombre_limpio}'.")
+            raise NombreDuplicadoError(f"Ya existe un archivo abierto con el nombre '{nombre_limpio}'.")
 
         if not contenido_inicial and os.path.isfile(nombre_limpio):
             try:
@@ -65,7 +67,7 @@ class ServicioArchivos:
             if 0 <= indice_0_based < len(self._contexto.archivos_abiertos):
                 archivo = self._contexto.archivos_abiertos.obtener_por_indice(indice_0_based)
                 if isinstance(archivo, ArchivoCodigo):
-                    return self._contexto.cerrar_archivo(archivo.nombre)
+                    return self._contexto.cerrar_archivo_por_id(archivo.id_archivo)
 
         return self._contexto.cerrar_archivo(id_limpio)
 
@@ -81,7 +83,7 @@ class ServicioArchivos:
         indice = 1
         for item in self._contexto.archivos_abiertos:
             if isinstance(item, ArchivoCodigo):
-                es_activo = (activo is not None and item.nombre == activo.nombre)
+                es_activo = (activo is not None and item.id_archivo == activo.id_archivo)
                 resultado.append((indice, item, es_activo))
                 indice += 1
 

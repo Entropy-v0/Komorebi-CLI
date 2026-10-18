@@ -35,6 +35,17 @@ class TestArchivoCodigo(unittest.TestCase):
         self.assertEqual(archivo.conteo_lineas, 0)
         self.assertEqual(archivo.obtener_lineas(), [])
 
+    def test_id_unico_e_inmutable(self) -> None:
+        arc1 = ArchivoCodigo("app.py", "x = 1")
+        arc2 = ArchivoCodigo("app.py", "x = 2")
+        self.assertTrue(arc1.id_archivo.startswith("file-"))
+        self.assertEqual(arc1.id_archivo, arc1.id)
+        self.assertNotEqual(arc1.id_archivo, arc2.id_archivo)
+        self.assertNotEqual(arc1, arc2)
+
+        with self.assertRaises(AttributeError):
+            arc1.id_archivo = "otro-id"  # type: ignore[misc]
+
 
 if __name__ == "__main__":
     unittest.main()
