@@ -1,23 +1,14 @@
 # Guía Arquitectónica y Mapa del Proyecto — Komorebi Mini IDE
 
-**Algoritmos y Estructuras II**  
-**Universidad José Antonio Páez - Facultad de Ingeniería**  
-**Escuela de Ingeniería en Computación**
-
 ---
 
 ## 1. Resumen del Proyecto (Overview)
 
-**Komorebi Mini IDE** es un entorno de desarrollo minimalista interactivo para terminal (CLI/REPL), concebido para gestionar archivos de código fuente en memoria con respaldos automáticos en disco, validación sintáctica de delimitadores, control de cambios temporal (*Undo/Redo*), ordenamiento de diagnósticos estáticos y evaluación de complejidad algorítmica ($\mathcal{O}$) asistida por Inteligencia Artificial.
-
-* **Propósito Principal:** Proveer un IDE ligero operado por comandos de consola (sin menús numéricos) donde todas las colecciones críticas y motores de ordenamiento operan sobre estructuras de datos y algoritmos construidos desde cero, sin depender de colecciones o métodos de ordenamiento nativos del lenguaje (`list.sort()`, `sorted()`, `collections.deque`).
-* **Tecnología y Stack Principal:**
-  * **Lenguaje:** Python 3.10+ (aprovecha *Structural Pattern Matching* `match-case` para manipulación topológica de enlaces y *Type Hints* estrictos con `typing`).
-  * **Dependencias:** **Zero-Dependency** (100% Biblioteca Estándar de Python: `abc`, `shlex`, `json`, `urllib.request`, `uuid`, `datetime`, `os`, `re`, `unittest`).
-  * **Integración Externa:** API REST de Google Gemini (`generateContent`) mediante peticiones HTTP nativas, con degradación elegante (*Graceful Fallback*) hacia un motor de análisis estático local offline.
-* **Paradigma y Principios de Ingeniería:**
-  * **Programación Orientada a Objetos (POO) Estricta:** Regla arquitectónica de **una sola clase por archivo**, encapsulamiento mediante atributos privados (`_atributo`) expuestos con `@property`, polimorfismo mediante clases base abstractas (`ABC`) y separación estricta de responsabilidades (*Single Responsibility Principle*).
-  * **Arquitectura en Capas (*Bottom-Up*):** Construcción jerárquica unidireccional desde los componentes atómicos (nodos y estructuras) hasta la interfaz de usuario (`ConsolaApp`) y el *bootstrap* (`main.py`).
+- **Propósito Principal:** **Komorebi Mini IDE** es un entorno de desarrollo interactivo para terminal (CLI REPL) diseñado para gestionar espacios de trabajo jerárquicos de archivos de código en memoria con respaldo automático en disco, evaluar expresiones aritméticas exactas mediante Árboles de Expresiones, ofrecer diccionario y autocompletado por prefijo sobre Árboles AVL, indexar globalmente identificadores sobre un Árbol B de orden $m=4$, verificar balanceo sintáctico de delimitadores, administrar historial de cambios (*Undo/Redo*), ordenar diagnósticos con algoritmos clásicos y realizar análisis de complejidad algorítmica ($Big\ O$) asistido por IA (Google Gemini con modo *Offline Fallback*).
+- **Tecnología / Stack Principal:** **Python 3.10+** utilizando exclusivamente su biblioteca estándar (`fractions`, `math`, `shlex`, `json`, `urllib`, `datetime`, `uuid`, `unittest`, `abc`), sin dependencias externas ni estructuras o métodos nativos prohibidos (`list.sort()`, `sorted()`, `collections.deque`, `eval()`, `ast`).
+- **Paradigma y Estilo Arquitectónico:**
+  - **Programación Orientada a Objetos (POO)** con encapsulamiento estricto (atributos privados `_atributo` y acceso controlado vía `@property`) y la regla estricta de **una sola clase por archivo**.
+  - **Arquitectura en Capas Desacoplada (*Bottom-Up*):** separación neta entre Estructuras de Datos y Algoritmos (`src/estructuras`), Excepciones de Dominio (`src/excepciones`), Entidades del Núcleo (`src/nucleo`), Servicios de Negocio (`src/servicios`), Despacho de Comandos (`src/comandos`) e Interfaz de Consola (`src/cli`).
 
 ---
 
@@ -25,272 +16,196 @@
 
 ```text
 Komorebi/
-├── main.py                              # Punto de entrada y ensamblador (Composition Root / Bootstrap)
-├── config.json                          # Configuración externa (rutas, timeouts, proveedor y modelo IA)
-├── README.md                            # Documentación general, tabla Big O e instrucciones de uso
-├── indicaciones.md                      # Especificaciones y requisitos académicos del proyecto
-├── docs/                                # Documentación técnica, planes y guías de defensa
-│   ├── ESTRUCTURA.md                    # Guía arquitectónica y mapa completo del proyecto
-│   ├── auditoria_aprendizaje_ia.md      # Lineamientos de integración ética y auditoría de IA
-│   ├── commits.md                       # Convención de mensajes de commit del repositorio
-│   ├── guia_de_uso.md                   # Manual práctico interactivo de comandos CLI
-│   ├── guia_defensa.md                  # Guion técnico y defensa arquitectónica del proyecto
-│   ├── guia_estructuras_datos.md        # Justificación teórica y matemática de las estructuras propias
-│   └── plan_estructuracion.md           # Hoja de ruta de diseño Bottom-Up por fases
-├── logs/                                # Directorio de trazas operativas y errores persistentes
-│   └── errores.log                      # Archivo cronológico de eventos INFO, WARNING y ERROR
-├── respaldos/                           # Directorio de copias de seguridad físicas de archivos abiertos
-│   └── demo.py                          # Ejemplo de archivo respaldado desde la sesión en memoria
-├── src/                                 # Código fuente principal dividido en 6 paquetes modulares
-│   ├── estructuras/                     # Capa 1A: Estructuras de datos lineales y no lineales desde cero
-│   │   ├── nodo_lista.py                # Nodo doblemente enlazado (dato, siguiente, anterior)
-│   │   ├── nodo_pila.py                 # Nodo enlazado simple para estructura LIFO
-│   │   ├── nodo_cola.py                 # Nodo enlazado simple para estructura FIFO
-│   │   ├── nodo_arbol.py                # Nodo binario (valor, izquierda, derecha)
-│   │   ├── lista_enlazada.py            # Lista Doblemente Enlazada (gestión de archivos en memoria)
-│   │   ├── pila.py                      # Pila LIFO (balanceo sintáctico e historial Undo/Redo)
-│   │   ├── cola_fifo.py                 # Cola FIFO (buffer secuencial de peticiones a la IA)
-│   │   └── arbol_binario.py             # Árbol Binario de Búsqueda (BST con recorridos y eliminación)
-│   ├── algoritmos/                      # Capa 1B: Motores de ordenamiento manuales
-│   │   ├── ordenador_base.py            # Clase abstracta que define el contrato de ordenación
-│   │   ├── mergesort.py                 # Algoritmo Divide y Vencerás O(n log n) estable
-│   │   └── shellsort.py                 # Algoritmo por intervalos decrecientes (secuencia de Knuth)
-│   ├── nucleo/                          # Capa 2: Modelos de dominio y contenedor de estado global
-│   │   ├── archivo_codigo.py            # Entidad que representa un archivo abierto en memoria
-│   │   ├── diagnostico.py               # Entidad para alertas sintácticas con nivel de prioridad
-│   │   ├── peticion_ia.py               # Entidad con ciclo de vida para solicitudes de análisis IA
-│   │   ├── configuracion_app.py         # Modelo tipado y validador de parámetros de config.json / .env
-│   │   └── contexto_app.py              # Estado central de la sesión (archivos, activo, cola, alertas)
-│   ├── servicios/                       # Capa 3: Lógica de negocio (Receptores del patrón Command)
-│   │   ├── servicio_configuracion.py    # Carga de config.json, variables .env y creación de carpetas
-│   │   ├── servicio_archivos.py         # CRUD de archivos en ListaEnlazada y sincronización a disco
-│   │   ├── servicio_sintaxis.py         # Verificador de delimitadores (), {}, [] mediante Pila
-│   │   ├── servicio_historial.py        # Motor Undo/Redo basado en doble Pila LIFO de snapshots
-│   │   ├── servicio_diagnosticos.py     # Selector y ejecutor de algoritmos MergeSort / ShellSort
-│   │   ├── servicio_cola_ia.py          # Gestor del buffer ColaFIFO para despacho secuencial IA
-│   │   ├── servicio_cliente_ia.py       # Cliente HTTP REST para Gemini con fallback estático local
-│   │   └── servicio_logs.py             # Registrador de eventos y errores en disco
-│   ├── comandos/                        # Capa 4: Patrón Command (Invocador y 15 comandos concretos)
-│   │   ├── comando_base.py              # Interfaz abstracta ComandoBase (método ejecutar)
-│   │   ├── invocador_comandos.py        # Despachador central y registro de comandos (Invoker)
-│   │   ├── comando_new.py               # Comando 'new': crea archivo en memoria y respaldo
-│   │   ├── comando_list.py              # Comando 'list': enumera archivos de la ListaEnlazada
-│   │   ├── comando_switch.py            # Comando 'switch': cambia el archivo activo por nombre/índice
-│   │   ├── comando_delete.py            # Comando 'delete': cierra archivo y desvincula su nodo
-│   │   ├── comando_config.py            # Comando 'config': recarga o muestra la configuración activa
-│   │   ├── comando_check.py             # Comando 'check': ejecuta análisis de balanceo sintáctico
-│   │   ├── comando_undo.py              # Comando 'undo': revierte última edición desde pila Deshacer
-│   │   ├── comando_redo.py              # Comando 'redo': reaplica edición desde pila Rehacer
-│   │   ├── comando_sort.py              # Comando 'sort': ordena diagnósticos por línea o severidad
-│   │   ├── comando_queue_status.py      # Comando 'queue-status': inspecciona el buffer ColaFIFO
-│   │   ├── comando_analyze.py           # Comando 'analyze': encola y despacha análisis Big O a la IA
-│   │   ├── comando_edit.py              # Comando 'edit': anexa líneas registrando snapshot previo
-│   │   ├── comando_show.py              # Comando 'show': imprime el código activo numerado
-│   │   ├── comando_help.py              # Comando 'help': lista la sintaxis de todos los comandos
-│   │   └── comando_exit.py              # Comando 'exit': finaliza ordenadamente el ciclo REPL
-│   └── cli/                             # Capa 5: Interfaz de línea de comandos e intérprete REPL
-│       ├── analizador_comandos.py       # Parser léxico (shlex) que separa comando y argumentos
-│       └── consola_app.py               # Bucle interactivo REPL y generador de prompt dinámico
-└── test/                                # Suite de 21 módulos de pruebas unitarias automatizadas
-    ├── test_nodos.py                    # Pruebas de NodoLista, NodoPila, NodoCola y NodoArbol
-    ├── test_lista_enlazada.py           # Pruebas de inserción, búsqueda, eliminación y memoria
-    ├── test_pila.py                     # Pruebas LIFO (apilar, desapilar, cima, vaciado)
-    ├── test_cola_fifo.py                # Pruebas FIFO (encolar, desencolar, frente, vaciado)
-    ├── test_arbol_binario.py            # Pruebas BST (insertar, consultar, modificar, eliminar, recorridos)
-    ├── test_algoritmos_ordenamiento.py  # Pruebas de MergeSort y ShellSort con criterios custom
-    ├── test_archivo_codigo.py           # Pruebas del modelo ArchivoCodigo
-    ├── test_diagnostico.py              # Pruebas del modelo Diagnostico y prioridades
-    ├── test_peticion_ia.py              # Pruebas de transiciones de estado de PeticionIA
-    ├── test_configuracion_app.py        # Pruebas de serialización, validación y variables de entorno
-    ├── test_contexto_app.py             # Pruebas del contenedor de estado global ContextoApp
-    ├── test_servicio_configuracion.py   # Pruebas de lectura de JSON y creación de directorios
-    ├── test_servicio_archivos.py        # Pruebas de gestión de archivos y respaldos en disco
-    ├── test_servicio_sintaxis.py        # Pruebas de balanceo de delimitadores (), {}, []
-    ├── test_servicio_historial.py       # Pruebas de pilas Undo y Redo
-    ├── test_servicio_diagnosticos.py    # Pruebas del servicio de ordenamiento de alertas
-    ├── test_servicio_cola_ia.py         # Pruebas del buffer FIFO de IA
-    ├── test_servicio_cliente_ia.py      # Pruebas del cliente HTTP Gemini y fallback local
-    ├── test_servicio_logs.py            # Pruebas de persistencia y lectura de logs
-    ├── test_patron_comandos.py          # Pruebas de InvocadorComandos y los 15 comandos concretos
-    ├── test_cli.py                      # Pruebas de AnalizadorComandos y ConsolaApp
-    └── test_bootstrap.py                # Pruebas de integración del arranque completo en main.py
+├── main.py                                  # Punto de entrada y ensamblador de dependencias (Bootstrap / DI)
+├── config.json                              # Archivo de configuración externa (rutas, IA, timeouts)
+├── README.md                                # Documentación general, tabla Big-O y catálogo de comandos
+├── docs/                                    # Documentación técnica, arquitectónica y de defensa académica
+│   ├── ESTRUCTURA.md                        # Mapa arquitectónico integral del repositorio
+│   ├── guia_defensa_fase2.md                # Guía de defensa académica de las 4 estructuras arbóreas
+│   └── commits.md                           # Estándar de mensajes de commits del proyecto
+├── scripts/                                 # Scripts demostrativos independientes
+│   └── demo_avl_vs_bst.py                   # Comparación empírica de altura entre BST normal y Árbol AVL
+├── src/                                     # Código fuente principal del sistema
+│   ├── cli/                                 # Capa de Interfaz de Línea de Comandos (Presentación / REPL)
+│   │   ├── analizador_comandos.py           # Parser léxico de entradas de usuario con soporte de comillas
+│   │   └── consola_app.py                   # Bucle interactivo REPL, prompt dinámico [/ruta] y captura de errores
+│   ├── comandos/                            # Capa de Aplicación (Implementación del Patrón Command)
+│   │   ├── comando_base.py                  # Clase base abstracta (Interfaz Command)
+│   │   ├── invocador_comandos.py            # Invoker: registro, búsqueda, ordenación propia y despacho
+│   │   ├── comando_new.py                   # Crea un archivo en el directorio actual y guarda respaldo
+│   │   ├── comando_list.py                  # Lista archivos abiertos con su ruta en el Workspace
+│   │   ├── comando_switch.py                # Cambia el archivo activo por ID, nombre o ruta
+│   │   ├── comando_delete.py                # Elimina archivos/carpetas de N-ario, Lista, B-Tree y disco
+│   │   ├── comando_edit.py                  # Añade líneas al archivo activo registrando historial Undo
+│   │   ├── comando_show.py                  # Muestra el contenido numerado del archivo activo
+│   │   ├── comando_undo.py                  # Revierte la última edición mediante la pila Undo
+│   │   ├── comando_redo.py                  # Restaura una edición revertida mediante la pila Redo
+│   │   ├── comando_check.py                 # Ejecuta el verificador sintáctico de delimitadores
+│   │   ├── comando_sort.py                  # Ordena diagnósticos usando MergeSort o ShellSort
+│   │   ├── comando_queue_status.py          # Muestra el estado de la cola FIFO de peticiones IA
+│   │   ├── comando_analyze.py               # Encola y procesa análisis de código con el cliente IA
+│   │   ├── comando_config.py                # Visualiza o recarga la configuración desde JSON
+│   │   ├── comando_mkdir.py                 # Crea directorios en el Árbol N-ario del Workspace
+│   │   ├── comando_cd.py                    # Cambia el directorio actual (soporta /, ., .. y rutas relativas)
+│   │   ├── comando_pwd.py                   # Muestra la ruta absoluta del directorio actual
+│   │   ├── comando_ls.py                    # Lista el contenido del directorio actual o de una ruta
+│   │   ├── comando_tree.py                  # Dibuja en ASCII el Árbol N-ario del Workspace (preorden iterativo)
+│   │   ├── comando_mv.py                    # Mueve o renombra archivos/carpetas previniendo ciclos
+│   │   ├── comando_eval.py                  # Evalúa expresiones aritméticas con Árbol de Expresiones
+│   │   ├── comando_add_keyword.py           # Agrega una palabra clave al diccionario Árbol AVL
+│   │   ├── comando_suggest.py               # Sugiere palabras por prefijo con poda en el Árbol AVL
+│   │   ├── comando_remove_keyword.py        # Elimina una palabra clave del Árbol AVL con rebalanceo
+│   │   ├── comando_index_all.py             # Indexa todos los identificadores del Workspace en el Árbol B
+│   │   ├── comando_find_global.py           # Busca un identificador en el índice global Árbol B
+│   │   ├── comando_help.py                  # Genera dinámicamente la tabla de ayuda de los 27 comandos
+│   │   └── comando_exit.py                  # Señaliza el cierre limpio del bucle REPL
+│   ├── servicios/                           # Capa de Dominio / Lógica de Negocio (Receptores)
+│   │   ├── servicio_archivos.py             # Coordina ListaEnlazada, ArbolNario, ArbolB y respaldos en disco
+│   │   ├── servicio_workspace.py            # Orquesta operaciones jerárquicas del Workspace sobre ArbolNario
+│   │   ├── servicio_expresiones.py          # Evalúa expresiones directas o líneas aritméticas del archivo activo
+│   │   ├── servicio_diccionario.py          # Gestiona el diccionario de keywords de Python sobre ArbolAVL
+│   │   ├── servicio_indexacion.py           # Tokenizador léxico propio e indexación global sobre ArbolB
+│   │   ├── servicio_sintaxis.py             # Analizador léxico de balanceo de (), {}, [] con Pila
+│   │   ├── servicio_historial.py            # Motor Undo/Redo basado en doble Pila LIFO por archivo
+│   │   ├── servicio_diagnosticos.py         # Ordenamiento de alertas con MergeSort y ShellSort
+│   │   ├── servicio_cola_ia.py              # Gestión del buffer FIFO de solicitudes hacia la IA
+│   │   ├── servicio_cliente_ia.py           # Cliente HTTP Gemini API + motor heurístico Offline Fallback
+│   │   ├── servicio_configuracion.py        # Lectura, validación y carga de config.json
+│   │   └── servicio_logs.py                 # Escritura de trazas y errores en logs/errores.log
+│   ├── nucleo/                              # Capa de Entidades de Dominio y Estado de Sesión
+│   │   ├── archivo_codigo.py                # Entidad de archivo en memoria con id_archivo único inmutable
+│   │   ├── referencia_token.py              # Entidad inmutable (id_archivo, linea) para hojas del Árbol B
+│   │   ├── diagnostico.py                   # Entidad de error/alerta sintáctica (línea, columna, severidad)
+│   │   ├── peticion_ia.py                   # Entidad de solicitud de análisis de IA y su ciclo de estados
+│   │   ├── configuracion_app.py             # Objeto de valor con los parámetros de configuración
+│   │   └── contexto_app.py                  # Contenedor del estado global (Lista, Cola, N-ario, AVL, B-Tree)
+│   ├── excepciones/                         # Jerarquía de Excepciones de Dominio (1 clase por archivo)
+│   │   ├── error_synthetix.py               # Excepción base del dominio (con alias ErrorKomorebi)
+│   │   ├── ruta_invalida_error.py           # Error de resolución de rutas o ambigüedad de archivos
+│   │   ├── nombre_duplicado_error.py        # Error de colisión de nombres en un mismo directorio
+│   │   ├── movimiento_invalido_error.py     # Error al mover la raíz o mover carpeta dentro de su subárbol
+│   │   ├── expresion_invalida_error.py      # Error léxico o sintáctico en expresiones aritméticas
+│   │   ├── division_por_cero_error.py       # Error matemático de división entre cero en evaluación
+│   │   └── palabra_duplicada_error.py       # Error al insertar una palabra repetida en el Árbol AVL
+│   └── estructuras/                         # Capa Base: Estructuras de Datos y Algoritmos desde cero
+│       ├── nodo_lista.py                    # Nodo doblemente enlazado (anterior, siguiente)
+│       ├── lista_enlazada.py                # Lista doblemente enlazada genérica O(1) en extremos
+│       ├── nodo_pila.py                     # Nodo simple para estructura LIFO
+│       ├── pila.py                          # Pila LIFO dinámica para sintaxis, Undo/Redo, tree y Shunting-Yard
+│       ├── nodo_cola.py                     # Nodo simple para estructura FIFO
+│       ├── cola_fifo.py                     # Cola FIFO dinámica para el buffer de peticiones IA
+│       ├── nodo_nario.py                    # Nodo del Árbol N-ario (CARPETA con ListaEnlazada de hijos o ARCHIVO)
+│       ├── arbol_nario.py                   # Árbol N-ario del Workspace con resolución de rutas y preorden iterativo
+│       ├── nodo_expresion.py                # Nodo binario para operadores y operandos aritméticos
+│       ├── arbol_expresion.py               # Árbol Binario de Expresiones (Shunting-Yard, Fraction, RPN)
+│       ├── nodo_avl.py                      # Nodo del Árbol AVL con palabra, descripción y altura cacheada
+│       ├── arbol_avl.py                     # Árbol AVL con rotaciones LL/RR/LR/RL y autocompletado con poda
+│       ├── nodo_b.py                        # Página multicamino del Árbol B (claves, valores, hijos, es_hoja)
+│       ├── arbol_b.py                       # Árbol B de orden m=4 (inserción bottom-up, split, préstamo y fusión)
+│       ├── mergesort.py                     # Algoritmo recursivo Divide y Vencerás O(n log n)
+│       └── shellsort.py                     # Algoritmo in-place con secuencia de intervalos de Knuth
+└── test/                                    # Suite de pruebas unitarias e integración (133 tests)
+    ├── test_lista_enlazada.py               # Pruebas de ListaEnlazada
+    ├── test_pila.py                         # Pruebas de Pila LIFO
+    ├── test_cola_fifo.py                    # Pruebas de ColaFIFO
+    ├── test_mergesort.py                    # Pruebas de MergeSort
+    ├── test_shellsort.py                    # Pruebas de ShellSort
+    ├── test_archivo_codigo.py               # Pruebas de ArchivoCodigo e id_archivo inmutable
+    ├── test_diagnostico.py                  # Pruebas de Diagnostico
+    ├── test_peticion_ia.py                  # Pruebas de PeticionIA
+    ├── test_configuracion_app.py            # Pruebas de ConfiguracionApp
+    ├── test_contexto_app.py                 # Pruebas de ContextoApp
+    ├── test_fase0_base.py                   # Pruebas de jerarquía ErrorSynthetix y ReferenciaToken
+    ├── test_servicio_archivos.py            # Pruebas de ServicioArchivos y respaldos
+    ├── test_servicio_sintaxis.py            # Pruebas de validación de delimitadores
+    ├── test_servicio_historial.py           # Pruebas de Undo / Redo
+    ├── test_servicio_diagnosticos.py        # Pruebas de ordenamiento de diagnósticos
+    ├── test_servicio_cola_ia.py             # Pruebas de encolado FIFO de IA
+    ├── test_servicio_cliente_ia.py          # Pruebas de cliente IA y modo Offline Fallback
+    ├── test_servicio_configuracion.py       # Pruebas de carga JSON
+    ├── test_servicio_logs.py                # Pruebas de escritura y lectura de logs
+    ├── test_patron_comandos.py              # Pruebas de integración de comandos base
+    ├── test_cli.py                          # Pruebas de AnalizadorComandos y ConsolaApp
+    ├── test_arbol_nario_workspace.py        # Pruebas de ArbolNario, ServicioWorkspace y comandos de directorio
+    ├── test_arbol_expresiones.py            # Pruebas de ArbolExpresion, Shunting-Yard y ComandoEval
+    ├── test_arbol_avl.py                    # Pruebas de ArbolAVL, rotaciones, poda y ServicioDiccionario
+    ├── test_arbol_b.py                      # Pruebas de ArbolB (m=4), splits, fusiones y ServicioIndexacion
+    └── test_integracion_fase2.py            # Prueba E2E por REPL y auditoría automática de reglas de código
 ```
 
 ---
 
 ## 3. Arquitectura y Patrones de Diseño
 
-### 3.1. Arquitectura en Capas (Layered Architecture)
-
-El sistema implementa una arquitectura estrictamente estratificada en **5 capas funcionales + 1 capa de ensamblaje (Bootstrap)**. Las dependencias fluyen exclusivamente hacia abajo, evitando acoplamiento circular:
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                    CAPA 6: BOOTSTRAP (main.py)                          │
-│         Inyección manual de dependencias e inicio del sistema           │
-└────────────────────────────────────┬────────────────────────────────────┘
-                                     │ instancia y enlaza
-                                     ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                    CAPA 5: INTERFAZ CLI (src/cli/)                      │
-│          ConsolaApp (Bucle REPL) ──► AnalizadorComandos (Parser)        │
-└────────────────────────────────────┬────────────────────────────────────┘
-                                     │ (nombre_cmd, args)
-                                     ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                 CAPA 4: PATRÓN COMMAND (src/comandos/)                  │
-│          InvocadorComandos ──► ComandoBase ◄── 15 Comandos Concretos    │
-└────────────────────────────────────┬────────────────────────────────────┘
-                                     │ delega acción de negocio
-                                     ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│               CAPA 3: SERVICIOS DE NEGOCIO (src/servicios/)             │
-│  Archivos • Sintaxis • Historial • Diagnósticos • ColaIA • ClienteIA    │
-└──────────────────┬───────────────────────────────────┬──────────────────┘
-                   │ muta / consulta                   │ opera con
-                   ▼                                   ▼
-┌─────────────────────────────────────┐ ┌─────────────────────────────────┐
-│   CAPA 2: NÚCLEO (src/nucleo/)      │ │ CAPA 1: ESTRUCTURAS Y ALGORITMOS│
-│ ContextoApp • ArchivoCodigo         │ │ ListaEnlazada • Pila • ColaFIFO │
-│ Diagnostico • PeticionIA • Config   │ │ ArbolBinario • Merge/ShellSort  │
-└─────────────────────────────────────┘ └─────────────────────────────────┘
-```
-
-### 3.2. Patrones de Diseño Identificados
+### Patrones de Diseño Implementados
 
 1. **Command Pattern (Patrón Comando):**
-   * **Estructura:** Compuesto por `InvocadorComandos` (*Invoker*), la clase abstracta `ComandoBase` (*Command*), las 15 subclases en `src/comandos/` (*Concrete Commands*) y las clases de `src/servicios/` junto a `ContextoApp` (*Receivers*).
-   * **Propósito:** Desacoplar por completo el bucle de lectura de terminal (`ConsolaApp`) de las operaciones de negocio. Agregar un comando nuevo no requiere modificar el parser ni la consola; basta con crear una clase hija de `ComandoBase` y registrarla en `bootstrap()`.
+   - **Propósito:** Desacoplar el bucle REPL (`ConsolaApp`) de los servicios de negocio y estructuras de datos subyacentes, eliminando cualquier menú numérico o bloques condicionales monolíticos.
+   - **Participantes:**
+     - **Command (`ComandoBase`):** Clase abstracta que exige implementar `ejecutar(argumentos: List[str]) -> bool`.
+     - **Concrete Commands (27 clases en `src/comandos/`):** Delegan toda la lógica a su servicio receptor correspondiente.
+     - **Invoker (`InvocadorComandos`):** Almacena el catálogo de comandos, los ordena con inserción propia y captura polimórficamente cualquier `ErrorSynthetix`.
+     - **Receivers (`src/servicios/`):** Ejecutan las operaciones sobre el estado y las estructuras de datos.
+     - **Client (`main.py -> bootstrap()`):** Instancia e inyecta todas las dependencias.
 
-2. **Strategy & Template Method Pattern (Estrategia y Método Plantilla en Ordenamiento):**
-   * **Estructura:** `OrdenadorBase` define el contrato abstracto `ordenar()` y el método auxiliar común `_es_menor_o_igual()`. `MergeSort` y `ShellSort` implementan las estrategias concretas.
-   * **Propósito:** `ServicioDiagnosticos` selecciona dinámicamente en tiempo de ejecución qué algoritmo aplicar (`mergesort` o `shellsort`) y qué función extractora de clave usar (`linea` o `prioridad`) sin acoplarse a los detalles internos del algoritmo.
+2. **Shared State / Context Object (`ContextoApp`):**
+   - Mantiene sincronizadas las estructuras en vivo de la sesión:
+     - `archivos_abiertos` (`ListaEnlazada` de `ArchivoCodigo`)
+     - `workspace` (`ArbolNario` de carpetas y archivos, compartiendo exactamente las mismas referencias de `ArchivoCodigo`)
+     - `directorio_actual` (`NodoNario` activo en el Workspace)
+     - `diccionario` (`ArbolAVL` con las palabras reservadas de Python y keywords del usuario)
+     - `indice_global` (`ArbolB` de orden $m=4$ que mapea cada identificador a su lista de `ReferenciaToken`)
 
-3. **Dependency Injection & Composition Root (Inyección de Dependencias):**
-   * **Estructura:** La función `bootstrap()` en `main.py` instancia el estado compartido (`ContextoApp`), los servicios y los comandos, inyectando por constructor únicamente las dependencias que cada componente necesita.
-   * **Propósito:** Evita variables globales o Singletons ocultos, facilitando las pruebas unitarias aisladas en `test/`.
+### Diagrama de Interacción entre Capas y Estructuras Arbóreas
 
-4. **State Object / Shared Context (Contenedor de Estado de Sesión):**
-   * **Estructura:** `ContextoApp` centraliza el estado mutable de la sesión en memoria (la `ListaEnlazada` de archivos, el puntero al `ArchivoCodigo` activo, la `ColaFIFO` de peticiones IA, la lista de `Diagnostico` y la `ConfiguracionApp`).
+```mermaid
+flowchart TD
+    CLI["ConsolaApp (REPL) + AnalizadorComandos"] --> INV["InvocadorComandos"]
+    INV --> CMD_WS["Comandos Workspace (mkdir, cd, pwd, ls, tree, mv, new, delete)"]
+    INV --> CMD_EX["ComandoEval (eval)"]
+    INV --> CMD_AVL["Comandos Diccionario (add-keyword, suggest, remove-keyword)"]
+    INV --> CMD_BT["Comandos Índice (index-all, find-global)"]
 
-5. **Circuit Breaker / Graceful Fallback (Degradación Elegante Offline):**
-   * **Estructura:** En `ServicioClienteIA.procesar_peticion()`, cualquier ausencia de API Key, fallo de red o timeout HTTP activa transparentemente `_analisis_estatico_local()`, garantizando continuidad operativa.
+    CMD_WS --> S_WS["ServicioWorkspace + ServicioArchivos"]
+    CMD_EX --> S_EX["ServicioExpresiones"]
+    CMD_AVL --> S_AVL["ServicioDiccionario"]
+    CMD_BT --> S_BT["ServicioIndexacion"]
+
+    S_WS --> NARIO["ArbolNario (NodoNario + Pila + ListaEnlazada)"]
+    S_EX --> EXPR["ArbolExpresion (NodoExpresion + 2 Pilas Shunting-Yard)"]
+    S_AVL --> AVL["ArbolAVL (NodoAVL + Rotaciones LL/RR/LR/RL + Poda)"]
+    S_BT --> BTREE["ArbolB m=4 (NodoB + ReferenciaToken)"]
+    S_BT -. "Filtra keywords O(log n)" .-> AVL
+    S_BT -. "Recorre archivos" .-> NARIO
+```
 
 ---
 
 ## 4. Desglose de Clases, Módulos y Funciones Clave
 
-### 4.1. Punto de Entrada e Interfaz CLI (`main.py` y `src/cli/`)
-
-| Componente | Archivo | Rol y Responsabilidad Principal |
-| :--- | :--- | :--- |
-| `bootstrap()` / `main()` | `main.py` | Ensambla las capas del proyecto, procesa flags CLI (`-c`/`--config`) e inicia el REPL. |
-| `ConsolaApp` | `src/cli/consola_app.py` | Gestiona el bucle `while` interactivo, construye el prompt dinámico (`Komorebi [archivo]> `) y captura interrupciones (`KeyboardInterrupt`, `EOFError`, `SystemExit`). |
-| `AnalizadorComandos` | `src/cli/analizador_comandos.py` | Tokeniza la línea ingresada por el usuario usando `shlex.split` (con fallback a `.split()` si hay comillas sin cerrar), retornando `(nombre_comando, argumentos)`. |
-
-### 4.2. Capa de Comandos (`src/comandos/`)
-
-| Componente | Archivo | Sintaxis CLI | Rol y Receptores Invocados |
+| Capa | Archivo | Clase / Símbolo | Responsabilidad Principal |
 | :--- | :--- | :--- | :--- |
-| `ComandoBase` | `comando_base.py` | *(Abstracta)* | Define propiedades `nombre`, `descripcion`, `sintaxis` y el método abstracto `ejecutar(argumentos)`. |
-| `InvocadorComandos` | `invocador_comandos.py` | *(Invoker)* | Almacena el registro `dict[str, ComandoBase]`, busca comandos por nombre y despacha `ejecutar_comando()`. |
-| `ComandoNew` | `comando_new.py` | `new <archivo> [contenido]` | Invoca `ServicioArchivos.crear_archivo()` para insertar en la `ListaEnlazada` y respaldar en disco. |
-| `ComandoList` | `comando_list.py` | `list` | Recorre los archivos abiertos mediante `ServicioArchivos.listar_archivos()` indicando cuál está activo. |
-| `ComandoSwitch` | `comando_switch.py` | `switch <id/nombre>` | Alterna el archivo activo por nombre o índice 1-based vía `ServicioArchivos.cambiar_archivo_activo()`. |
-| `ComandoDelete` | `comando_delete.py` | `delete <id/nombre>` | Elimina un archivo de la `ListaEnlazada` y reasigna el archivo activo si era el seleccionado. |
-| `ComandoEdit` | `comando_edit.py` | `edit <linea_codigo>` | Guarda snapshot en `ServicioHistorial`, anexa la línea al archivo activo y actualiza el respaldo físico. |
-| `ComandoShow` | `comando_show.py` | `show` | Muestra en consola el contenido del `ArchivoCodigo` activo con líneas numeradas. |
-| `ComandoUndo` | `comando_undo.py` | `undo` | Desapila el estado previo en `ServicioHistorial.deshacer()`, apila el actual en *Redo* y guarda respaldo. |
-| `ComandoRedo` | `comando_redo.py` | `redo` | Desapila de la pila *Redo* en `ServicioHistorial.rehacer()`, restaura el texto y actualiza respaldo. |
-| `ComandoCheck` | `comando_check.py` | `check` | Ejecuta `ServicioSintaxis.validar_codigo()` y almacena la lista de `Diagnostico` en `ContextoApp`. |
-| `ComandoSort` | `comando_sort.py` | `sort <line\|severity> <mergesort\|shellsort> [asc\|desc]` | Ordena los diagnósticos activos mediante `ServicioDiagnosticos.ordenar()`. |
-| `ComandoQueueStatus` | `comando_queue_status.py` | `queue-status` | Consulta `ServicioColaIA.obtener_estado()` e imprime las peticiones pendientes en la `ColaFIFO`. |
-| `ComandoAnalyze` | `comando_analyze.py` | `analyze` | Encola el código en `ServicioColaIA`, desencola en orden FIFO y procesa con `ServicioClienteIA`. |
-| `ComandoConfig` | `comando_config.py` | `config [ruta_archivo]` | Recarga un archivo JSON externo con `ServicioConfiguracion` o muestra la configuración activa. |
-| `ComandoHelp` | `comando_help.py` | `help` | Consulta `InvocadorComandos.listar_comandos()` y formatea la tabla de ayuda. |
-| `ComandoExit` | `comando_exit.py` | `exit` | Emite mensaje de cierre y ejecuta `sys.exit(0)`, capturado por `ConsolaApp.iniciar_repl()`. |
-
-### 4.3. Capa de Servicios de Negocio (`src/servicios/`)
-
-| Servicio | Archivo | Estructuras / Modelos que Orquesta | Responsabilidad Principal |
-| :--- | :--- | :--- | :--- |
-| `ServicioConfiguracion` | `servicio_configuracion.py` | `ConfiguracionApp` | Lee `config.json`, inyecta variables de `.env` y asegura la existencia física de `respaldos/` y `logs/`. |
-| `ServicioArchivos` | `servicio_archivos.py` | `ContextoApp`, `ArchivoCodigo`, `ListaEnlazada` | Gestiona el alta, baja, cambio y listado de archivos en memoria, sincronizando copias físicas en `respaldos/`. |
-| `ServicioSintaxis` | `servicio_sintaxis.py` | `Pila`, `Diagnostico` | Verifica línea por línea y columna por columna el balanceo de `()`, `{}` y `[]` apilando aperturas y comparando cierres. |
-| `ServicioHistorial` | `servicio_historial.py` | Dos instancias de `Pila` (`_pila_deshacer`, `_pila_rehacer`) | Administra snapshots de texto para revertir (`undo`) o rehacer (`redo`) cambios, limpiando `redo` ante nuevas ediciones. |
-| `ServicioDiagnosticos` | `servicio_diagnosticos.py` | `MergeSort`, `ShellSort`, `Diagnostico` | Traduce criterios textuales (`line`/`severity`) a funciones `lambda` y delega el ordenamiento al algoritmo elegido. |
-| `ServicioColaIA` | `servicio_cola_ia.py` | `ColaFIFO`, `PeticionIA` | Encola y desencola solicitudes hacia la IA en estricto orden de llegada (FIFO) y construye reportes de estado. |
-| `ServicioClienteIA` | `servicio_cliente_ia.py` | `ConfiguracionApp`, `PeticionIA` | Ejecuta peticiones HTTP POST a Google Gemini REST o activa el analizador estático local offline si no hay red/API Key. |
-| `ServicioLogs` | `servicio_logs.py` | Archivo `logs/errores.log` | Escribe trazas con marca de tiempo (`INFO`, `WARNING`, `ERROR`) para auditoría y diagnóstico de fallos. |
-
-### 4.4. Capa de Núcleo, Estructuras de Datos y Algoritmos (`src/nucleo/`, `src/estructuras/`, `src/algoritmos/`)
-
-| Categoría | Clase | Archivo | Detalles Técnicos y Complejidad |
-| :--- | :--- | :--- | :--- |
-| **Núcleo** | `ContextoApp` | `contexto_app.py` | Mantiene `_archivos_abiertos` (`ListaEnlazada`), `_archivo_activo`, `_cola_ia` (`ColaFIFO`), `_diagnosticos` y `_configuracion`. |
-| **Núcleo** | `ArchivoCodigo` | `archivo_codigo.py` | Encapsula nombre, contenido textual, timestamps de creación/modificación, conteo de líneas y tamaño en bytes. |
-| **Núcleo** | `Diagnostico` | `diagnostico.py` | Alerta con `linea`, `columna`, `severidad` (`INFO`=1, `WARN`=2, `ERROR`=3) y propiedad numérica `prioridad`. |
-| **Núcleo** | `PeticionIA` | `peticion_ia.py` | Máquina de estados (`PENDIENTE` $\rightarrow$ `EN_PROCESO` $\rightarrow$ `COMPLETADO` \| `FALLIDO`) con ID único `req-<uuid>`. |
-| **Núcleo** | `ConfiguracionApp` | `configuracion_app.py` | Resuelve interpolación `${GEMINI_API_KEY}`, enmascara claves sensibles y construye URLs completas del endpoint IA. |
-| **Estructura** | `ListaEnlazada` + `NodoLista` | `lista_enlazada.py` | Doblemente enlazada (`_cabeza`, `_cola`). Inserción en extremos $\mathcal{O}(1)$, búsqueda $\mathcal{O}(n)$, desvinculación con `match-case` $\mathcal{O}(1)$. |
-| **Estructura** | `Pila` + `NodoPila` | `pila.py` | Estructura LIFO con puntero `_tope`. Operaciones `apilar`, `desapilar` y `cima` en tiempo constante $\mathcal{O}(1)$. |
-| **Estructura** | `ColaFIFO` + `NodoCola` | `cola_fifo.py` | Estructura FIFO con punteros `_frente` y `_final`. Operaciones `encolar`, `desencolar` y `frente` en $\mathcal{O}(1)$. |
-| **Estructura** | `ArbolBinario` + `NodoArbol` | `arbol_binario.py` | Árbol Binario de Búsqueda (BST). Soporta `insertar`, `consultar`, `modificar`, `eliminar` (3 casos vía `match-case`) en $\mathcal{O}(\log n)$ promedio, y recorridos `inorden`, `preorden`, `postorden` en $\mathcal{O}(n)$. |
-| **Algoritmo** | `MergeSort` | `mergesort.py` | Ordenamiento recursivo Divide y Vencerás estable. Complejidad temporal $\mathcal{O}(n \log n)$ garantizada y espacial $\mathcal{O}(n)$. |
-| **Algoritmo** | `ShellSort` | `shellsort.py` | Ordenamiento por inserción con intervalos de Knuth ($h = 3h + 1$). Complejidad temporal $\mathcal{O}(n^{3/2})$ prom. y espacial auxiliar $\mathcal{O}(1)$. |
+| **Bootstrap** | `main.py` | `bootstrap()`, `main()` | Ensambla configuración, contexto, los 12 servicios y los 27 comandos CLI. |
+| **CLI** | `src/cli/analizador_comandos.py` | `AnalizadorComandos` | Tokeniza la línea ingresada respetando comillas mediante `shlex`. |
+| **CLI** | `src/cli/consola_app.py` | `ConsolaApp` | Gestiona el ciclo REPL, el prompt dinámico `Komorebi [/ruta]> ` y captura `ErrorSynthetix`. |
+| **Excepciones** | `src/excepciones/*.py` | `ErrorSynthetix` y 6 subclases | `RutaInvalidaError`, `NombreDuplicadoError`, `MovimientoInvalidoError`, `ExpresionInvalidaError`, `DivisionPorCeroError`, `PalabraDuplicadaError`. |
+| **Núcleo** | `src/nucleo/archivo_codigo.py` | `ArchivoCodigo` | Modelo de archivo con `_id_archivo` inmutable (`file-<uuid8>`), nombre y contenido. |
+| **Núcleo** | `src/nucleo/referencia_token.py` | `ReferenciaToken` | Objeto de valor inmutable (`__slots__`) con `(id_archivo, linea)` para el Árbol B. |
+| **Núcleo** | `src/nucleo/contexto_app.py` | `ContextoApp` | Estado global unificado de la sesión (Lista, Cola, N-ario, AVL y B-Tree). |
+| **Estructuras** | `src/estructuras/arbol_nario.py` | `ArbolNario` / `NodoNario` | Jerarquía de carpetas y archivos con rutas relativas/absolutas, detección de ciclos y `tree` iterativo con `Pila`. |
+| **Estructuras** | `src/estructuras/arbol_expresion.py` | `ArbolExpresion` / `NodoExpresion` | Tokenizador propio, Shunting-Yard con 2 instancias de `Pila`, evaluación exacta con `Fraction` y recorridos. |
+| **Estructuras** | `src/estructuras/arbol_avl.py` | `ArbolAVL` / `NodoAVL` | BST autobalanceado con rotaciones `LL`, `RR`, `LR`, `RL`, eliminación recursiva y autocompletado con poda. |
+| **Estructuras** | `src/estructuras/arbol_b.py` | `ArbolB` / `NodoB` | Árbol B multicamino de orden $m=4$ con inserción *bottom-up*, *split* por mediana, préstamo, fusión y validación. |
+| **Servicios** | `src/servicios/servicio_workspace.py` | `ServicioWorkspace` | Sincroniza el `ArbolNario` con `ServicioArchivos` y el directorio físico `respaldos/`. |
+| **Servicios** | `src/servicios/servicio_expresiones.py` | `ServicioExpresiones` | Evalúa expresiones aritméticas individuales o por lote desde el archivo activo. |
+| **Servicios** | `src/servicios/servicio_diccionario.py` | `ServicioDiccionario` | Precarga las 35 keywords de Python en el `ArbolAVL` y gestiona consultas y sugerencias con poda. |
+| **Servicios** | `src/servicios/servicio_indexacion.py` | `ServicioIndexacion` | Extrae identificadores con tokenizador propio, descarta keywords vía `ArbolAVL` e indexa en `ArbolB`. |
 
 ---
 
 ## 5. Flujo de Ejecución (Data Flow)
 
-### 5.1. Fase de Arranque e Inicialización (Bootstrap)
-
-1. **Entrada por SO:** El usuario ejecuta `python3 main.py` (opcionalmente con `--config <ruta>`). La función `main()` extrae la ruta de configuración y llama a `bootstrap(ruta_config)`.
-2. **Carga de Configuración y Entorno:** `ServicioConfiguracion.cargar_configuracion()` lee variables desde `.env` (si existe), parsea `config.json` construyendo una instancia de `ConfiguracionApp` y crea los directorios físicos `respaldos/` y `logs/`.
-3. **Creación del Estado Global:** Se instancia `ContextoApp(configuracion)`, que inicializa una `ListaEnlazada` vacía para los archivos y una `ColaFIFO` vacía para las peticiones de IA.
-4. **Instanciación de Servicios y Registro de Comandos:** Se crean los 7 servicios adicionales y se registran las 15 instancias de comandos concretos dentro de `InvocadorComandos`.
-5. **Inicio del Bucle REPL:** Se retorna `ConsolaApp` y se invoca `consola.iniciar_repl()`.
-
-### 5.2. Ciclo de Vida de una Petición Interactiva (Paso a Paso)
-
-En cada iteración del bucle REPL dentro de `ConsolaApp`, el flujo de datos atraviesa las capas de la siguiente forma:
-
-```
-[Usuario en Terminal]
-       │ 1. Ingresa línea de texto (ej. "check", "sort severity mergesort desc", "analyze")
-       ▼
-[ConsolaApp.ejecutar_linea()] (src/cli/consola_app.py)
-       │ 2. Solicita tokenización de la cadena
-       ▼
-[AnalizadorComandos.parsear()] (src/cli/analizador_comandos.py)
-       │ 3. Retorna tupla normalizada: (nombre_cmd, lista_argumentos)
-       ▼
-[InvocadorComandos.ejecutar_comando()] (src/comandos/invocador_comandos.py)
-       │ 4. Busca en diccionario O(1) la instancia ComandoBase y llama a comando.ejecutar(args)
-       ▼
-[Comando Concreto] (src/comandos/comando_*.py)
-       │ 5. Valida argumentos y delega la operación al Servicio de Negocio inyectado
-       ▼
-[Servicio de Negocio] (src/servicios/servicio_*.py)
-       │ 6. Manipula Modelos de Dominio (src/nucleo/) apoyándose en Estructuras/Algoritmos (src/estructuras/, src/algoritmos/)
-       ▼
-[ContextoApp / Disco / Consola]
-       │ 7. Actualiza el estado en memoria, persiste respaldos/logs y muestra respuesta en CLI
-```
-
-#### Casos de Flujo Representativos hasta las Capas Profundas:
-
-* **Flujo A — Creación, Edición y Retroceso (`new` $\rightarrow$ `edit` $\rightarrow$ `undo`):**
-  1. `new app.py "def suma(a, b):"` $\rightarrow$ `ComandoNew` llama a `ServicioArchivos.crear_archivo()` $\rightarrow$ crea `ArchivoCodigo` $\rightarrow$ `ContextoApp.abrir_archivo()` invoca `ListaEnlazada.insertar_al_final()` envolviendo el archivo en un `NodoLista` en $\mathcal{O}(1)$ y escribe `respaldos/app.py`.
-  2. `edit "    return a + b"` $\rightarrow$ `ComandoEdit` invoca `ServicioHistorial.registrar_modificacion()`, el cual apila el texto anterior en `_pila_deshacer` (`Pila.apilar()` creando un `NodoPila`) y limpia `_pila_rehacer`. Luego actualiza `ArchivoCodigo.modificar_contenido()` y sobreescribe el respaldo en disco.
-  3. `undo` $\rightarrow$ `ComandoUndo` llama a `ServicioHistorial.deshacer()`, que extrae el snapshot de `_pila_deshacer` (`Pila.desapilar()` desvinculando el `NodoPila`), apila el estado actual en `_pila_rehacer` y restaura el contenido previo del archivo.
-
-* **Flujo B — Validación Sintáctica y Ordenamiento (`check` $\rightarrow$ `sort`):**
-  1. `check` $\rightarrow$ `ComandoCheck` invoca `ServicioSintaxis.validar_codigo()` $\rightarrow$ recorre cada carácter del archivo activo; apila `(simbolo, linea, col)` en su `Pila` ante `(` `{` `[` y desapila al encontrar `)` `}` `]`. Las discrepancias generan instancias de `Diagnostico` que se guardan en `ContextoApp.diagnosticos`.
-  2. `sort severity mergesort desc` $\rightarrow$ `ComandoSort` llama a `ServicioDiagnosticos.ordenar()` $\rightarrow$ resuelve `severity` a `lambda d: d.prioridad` y ejecuta `MergeSort.ordenar()` con `ascendente=False` $\rightarrow$ divide recursivamente la lista de diagnósticos y los intercala en `_mezclar()` usando `OrdenadorBase._es_menor_o_igual()`.
-
-* **Flujo C — Buffer FIFO y Análisis de Complejidad con IA (`analyze`):**
-  1. `analyze` $\rightarrow$ `ComandoAnalyze` invoca `ServicioColaIA.encolar()`, que instancia una `PeticionIA` en estado `PENDIENTE` y la inserta al final de la `ColaFIFO` (`NodoCola`).
-  2. Acto seguido, `ServicioColaIA.desencolar_siguiente()` extrae la petición del frente de la `ColaFIFO` en $\mathcal{O}(1)$ y la entrega a `ServicioClienteIA.procesar_peticion()`.
-  3. `ServicioClienteIA` cambia el estado a `EN_PROCESO`. Si hay API Key configurada, envía un `POST` JSON a Google Gemini (`urllib.request`); si no hay clave o ocurre un error de red, registra el incidente en `ServicioLogs` y ejecuta `_analisis_estatico_local()`. Finalmente, marca la petición como `COMPLETADO` e imprime el reporte de complejidad temporal, espacial y propuestas de refactorización.
-
+### Caso A: Creación, Movimiento e Indexación Global (`mkdir`, `new`, `index-all`, `mv`, `find-global`)
+1. **Creación jerárquica:** Al ejecutar `mkdir src`, `cd src` y `new app.py`, `ServicioWorkspace` y `ServicioArchivos` crean el nodo carpeta `/src` y el nodo archivo `/src/app.py` en el `ArbolNario`, insertan la **misma instancia** `ArchivoCodigo` (con `id_archivo` inmutable `file-xxxxxxxx`) en `ContextoApp.archivos_abiertos` (`ListaEnlazada`), y escriben `respaldos/src/app.py`.
+2. **Indexación en Árbol B (`index-all`):** `ServicioIndexacion.indexar_todo()` recorre el `ArbolNario` usando una `Pila` explícita, extrae cada identificador con su tokenizador carácter por carácter, consulta `ContextoApp.diccionario.contiene(token)` en el `ArbolAVL` en $\mathcal{O}(\log n)$ para descartar palabras reservadas (`def`, `return`, `if`, etc.), e inserta `ReferenciaToken(id_archivo, linea)` en el `ArbolB` de orden $m=4$.
+3. **Movimiento sin invalidar referencias (`mv /src/app.py /core/app.py`):** `ArbolNario.mover()` verifica que no se forme un ciclo jerárquico, reasigna el puntero `padre` del `NodoNario` a `/core` y mueve el archivo físico en `respaldos/core/app.py`. Como `ReferenciaToken` almacena el `id_archivo` inmutable y no la ruta textual, al ejecutar `find-global <token>` inmediatamente después, `ServicioIndexacion` resuelve `id_archivo` contra el `ArbolNario` y muestra `/core/app.py`.

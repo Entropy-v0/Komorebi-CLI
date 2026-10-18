@@ -4,184 +4,150 @@
 **Universidad José Antonio Páez - Facultad de Ingeniería**  
 **Escuela de Ingeniería en Computación**
 
-Komorebi es un entorno de desarrollo minimalista (**Mini IDE**) interactivo para terminal, construido desde cero en **Python** bajo el paradigma de **Programación Orientada a Objetos (POO)**. Aplica el patrón de diseño **Command (Comandos)**, implementa estructuras de datos fundamentales (lineales y no lineales) y algoritmos de ordenamiento avanzados sin el uso de estructuras ni métodos nativos prohibidos (`list.sort()`, `collections.deque`, etc.), e integra lectura de configuración externa y asistencia mediante Inteligencia Artificial (Google Gemini con fallback local seguro).
+Komorebi es un entorno de desarrollo minimalista (**Mini IDE**) interactivo para terminal, construido desde cero en **Python** bajo el paradigma de **Programación Orientada a Objetos (POO)**. Aplica el patrón de diseño **Command (Comandos)**, implementa estructuras de datos fundamentales **lineales** (`ListaEnlazada`, `Pila`, `ColaFIFO`) y **no lineales arbóreas** (`ArbolNario`, `ArbolExpresion`, `ArbolAVL`, `ArbolB` de orden $m=4$) junto con algoritmos de ordenamiento avanzados (`MergeSort`, `ShellSort`) sin el uso de estructuras ni métodos nativos prohibidos (`list.sort()`, `sorted()`, `collections.deque`, `eval()`, `ast`), e integra lectura de configuración externa y asistencia mediante Inteligencia Artificial (Google Gemini con fallback local seguro).
 
 ---
 
 ## 🏗️ Arquitectura del Sistema
 
-El sistema sigue un diseño desacoplado en capas concebido bajo el enfoque *Bottom-Up* (De lo Particular a lo General), donde cada clase reside en su propio fichero independiente:
+El sistema sigue un diseño desacoplado en capas concebido bajo el enfoque *Bottom-Up* (De lo Particular a lo General), donde **cada clase reside en su propio fichero independiente**:
 
 ```
-┌────────────────────────────────────────────────────────┐
-│             main.py / ConsolaApp (CLI)                 │
-└───────────────────────────┬────────────────────────────┘
-                            │ Despacha comandos (REPL)
-                            ▼
-┌────────────────────────────────────────────────────────┐
-│           Capa de Comandos (Patrón Command)            │
-│  InvocadorComandos ──► ComandoBase (15 comandos)       │
-└───────────────────────────┬────────────────────────────┘
-                            │ Invoca servicios receptores
-                            ▼
-┌────────────────────────────────────────────────────────┐
-│             Capa de Servicios de Negocio               │
-│  Archivos • Sintaxis • Historial • Diagnósticos • IA   │
-└──────────────┬──────────────────────────┬──────────────┘
-               │ Modela datos             │ Opera sobre
-               ▼                          ▼
-┌───────────────────────────┐  ┌─────────────────────────┐
-│     Modelos de Núcleo     │  │  Estructuras Propias    │
-│  ArchivoCodigo            │  │  ListaEnlazada (Doble)  │
-│  Diagnostico              │  │  Pila (LIFO)            │
-│  PeticionIA               │  │  ColaFIFO (FIFO)        │
-│  ConfiguracionApp         │  │  ArbolBinario (BST)     │
-│  ContextoApp              │  │  MergeSort / ShellSort  │
-└───────────────────────────┘  └─────────────────────────┘
-```
-
----
-
-## 🧩 Diagrama de Clases (Patrón Command y Estructuras)
-
-```
-       ┌──────────────────┐
-       │   ComandoBase    │◄─────────────────────────────┐
-       │  (Abstract Class)│                              │
-       ├──────────────────┤                              │
-       │ + ejecutar()     │                              │
-       └────────▲─────────┘                              │
-                │ Realizaciones                          │
-   ┌────────────┴───────────────┐                        │
-   │ ComandoNew                 │                        │
-   │ ComandoList                │                        │
-   │ ComandoSwitch              │                        │
-   │ ComandoDelete              │                        │
-   │ ComandoConfig              │                        │ Registra y ejecuta
-   │ ComandoCheck               │                        │
-   │ ComandoUndo / Redo         │                        │
-   │ ComandoSort                │               ┌────────┴──────────┐
-   │ ComandoQueueStatus         │               │ InvocadorComandos │
-   │ ComandoAnalyze             │               ├───────────────────┤
-   │ ComandoEdit / Show / Help  │               │ - _comandos: dict │
-   └────────────┬───────────────┘               └───────────────────┘
-                │ Invoca Receptores
-                ▼
 ┌────────────────────────────────────────────────────────────────┐
-│                   Servicios de Negocio                         │
-│  ServicioArchivos ────────► ListaEnlazada (NodoLista)          │
-│  ServicioSintaxis ────────► Pila (NodoPila)                    │
-│  ServicioHistorial ───────► Pila Undo / Pila Redo              │
-│  ServicioDiagnosticos ────► MergeSort / ShellSort              │
-│  ServicioColaIA ──────────► ColaFIFO (NodoCola)                │
-│  ServicioClienteIA ───────► Google Gemini API REST / Offline   │
-└────────────────────────────────────────────────────────────────┘
+│                 main.py / ConsolaApp (CLI REPL)                │
+└───────────────────────────────┬────────────────────────────────┘
+                                │ Despacha comandos (REPL)
+                                ▼
+┌────────────────────────────────────────────────────────────────┐
+│               Capa de Comandos (Patrón Command)                │
+│     InvocadorComandos ──► ComandoBase (27 comandos CLI)        │
+└───────────────────────────────┬────────────────────────────────┘
+                                │ Invoca servicios receptores
+                                ▼
+┌────────────────────────────────────────────────────────────────┐
+│                 Capa de Servicios de Negocio                   │
+│  Archivos • Workspace • Expresiones • Diccionario • Indexación │
+│  Sintaxis • Historial • Diagnósticos • Cola IA • Cliente IA    │
+└──────────────────┬──────────────────────────┬──────────────────┘
+                   │ Modela datos             │ Opera sobre
+                   ▼                          ▼
+┌───────────────────────────────┐  ┌─────────────────────────────┐
+│       Modelos de Núcleo       │  │     Estructuras Propias     │
+│  ArchivoCodigo (id inmutable) │  │  ListaEnlazada (Doble)      │
+│  ReferenciaToken (inmutable)  │  │  Pila (LIFO) / ColaFIFO     │
+│  Diagnostico / PeticionIA     │  │  ArbolNario (Workspace)     │
+│  ConfiguracionApp             │  │  ArbolExpresion (AST/RPN)   │
+│  ContextoApp                  │  │  ArbolAVL (Diccionario)     │
+│  Jerarquía ErrorSynthetix     │  │  ArbolB m=4 (Índice Global) │
+└───────────────────────────────┘  └─────────────────────────────┘
 ```
 
 ---
 
 ## 📊 Análisis de Complejidad Temporal y Espacial ($Big\ O$)
 
-Todas las estructuras de datos y algoritmos de ordenamiento fueron programados desde cero:
+### 1. Estructuras No Lineales (Árboles — Fase 2)
+
+| Estructura | Búsqueda | Inserción | Eliminación | Recorridos / Consultas | Espacio | Justificación Técnica |
+| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| **Árbol N-ario (`ArbolNario`)** | $\mathcal{O}(d \cdot b)$ por ruta / $\mathcal{O}(n)$ global | $\mathcal{O}(d \cdot b)$ | $\mathcal{O}(d \cdot b + s)$ | Preorden iterativo (`tree`): $\mathcal{O}(n)$ | $\mathcal{O}(n)$ | $d$: profundidad de la ruta; $b$: hijos por directorio; $s$: tamaño del subárbol eliminado. Usa `ListaEnlazada` para hijos y `Pila` explícita en `tree`. |
+| **Árbol de Expresiones (`ArbolExpresion`)** | $\mathcal{O}(n)$ | Construcción Shunting-Yard: $\mathcal{O}(n)$ | N/A (Inmutable tras construcción) | `evaluar()`, `preorden()`, `inorden()`, `postorden()`: $\mathcal{O}(n)$ | $\mathcal{O}(n)$ | Cada token se apila y desapila a lo sumo una vez en dos instancias de `Pila`. Evaluación postorden exacta con `fractions.Fraction`. |
+| **Árbol AVL (`ArbolAVL`)** | $\mathcal{O}(\log n)$ peor caso | $\mathcal{O}(\log n)$ peor caso | $\mathcal{O}(\log n)$ peor caso | `inorden()`: $\mathcal{O}(n)$ <br> `sugerir(prefijo)` con poda: $\mathcal{O}(\log n + k)$ | $\mathcal{O}(n)$ | Invariante $\|\text{FB}\| \le 1$ mantenida con rotaciones simples (`LL`, `RR`) y dobles (`LR`, `RL`) en $\mathcal{O}(1)$. Altura acotada por $1.44 \log_2(n+2)$. |
+| **Árbol B (`ArbolB`, orden $m=4$)** | $\mathcal{O}(\log_m n)$ peor caso | $\mathcal{O}(m \log_m n) = \mathcal{O}(\log n)$ | $\mathcal{O}(m \log_m n) = \mathcal{O}(\log n)$ | `inorden()` multicamino: $\mathcal{O}(n)$ | $\mathcal{O}(n + R)$ | Nodos con $[1, 3]$ claves y $[2, 4]$ hijos; hojas al mismo nivel. Inserción *bottom-up* con *split* por mediana y eliminación con préstamo/fusión. $R$: total de `ReferenciaToken`. |
+
+### 2. Estructuras Lineales y Algoritmos de Ordenamiento (Fase 1)
 
 | Componente / Estructura | Operación Clave | Complejidad Temporal | Complejidad Espacial | Justificación Técnica |
 | :--- | :--- | :---: | :---: | :--- |
 | **ListaEnlazada** (Doble) | Inserción Inicio / Final | $\mathcal{O}(1)$ | $\mathcal{O}(1)$ | Acceso directo vía punteros `_cabeza` y `_cola`. |
 | | Eliminación con referencia | $\mathcal{O}(1)$ | $\mathcal{O}(1)$ | Desvinculación inmediata puenteando nodos vecinos. |
 | | Búsqueda por Criterio | $\mathcal{O}(n)$ | $\mathcal{O}(1)$ | Recorrido lineal secuencial desde la cabeza. |
-| **Pila** (LIFO) | `apilar` (*push*) | $\mathcal{O}(1)$ | $\mathcal{O}(1)$ | Mutación del puntero `_tope`. |
-| | `desapilar` (*pop*) | $\mathcal{O}(1)$ | $\mathcal{O}(1)$ | Extracción de la cima y avance al siguiente nodo. |
-| **ColaFIFO** (FIFO) | `encolar` (*enqueue*) | $\mathcal{O}(1)$ | $\mathcal{O}(1)$ | Inserción directa en `_final`. |
-| | `desencolar` (*dequeue*) | $\mathcal{O}(1)$ | $\mathcal{O}(1)$ | Extracción directa desde `_frente`. |
-| **ArbolBinario** (BST) | Búsqueda / Inserción | $\mathcal{O}(\log n)$ prom. | $\mathcal{O}(\log n)$ prom. | Descarte de la mitad del subárbol en cada nivel. |
-| | Eliminación de Nodo | $\mathcal{O}(\log n)$ prom. | $\mathcal{O}(\log n)$ prom. | Reemplazo por sucesor inorden (mínimo derecho). |
-| | Recorrido Inorden | $\mathcal{O}(n)$ | $\mathcal{O}(n)$ | Visita exhaustiva de todos los vértices. |
-| **MergeSort** | `ordenar` | $\mathcal{O}(n \log n)$ | $\mathcal{O}(n)$ | Divide y Vencerás con división en $\log n$ niveles y mezcla lineal. |
-| **ShellSort** | `ordenar` | $\mathcal{O}(n^{3/2})$ prom. | $\mathcal{O}(1)$ *in-place* | Inserción con saltos según secuencia de Knuth ($h = 3h + 1$). |
+| **Pila** (LIFO) | `apilar` (*push*) / `desapilar` (*pop*) | $\mathcal{O}(1)$ | $\mathcal{O}(1)$ | Mutación directa del puntero `_tope`. |
+| **ColaFIFO** (FIFO) | `encolar` / `desencolar` | $\mathcal{O}(1)$ | $\mathcal{O}(1)$ | Inserción en `_final` y extracción desde `_frente`. |
+| **MergeSort** | `ordenar` | $\mathcal{O}(n \log n)$ | $\mathcal{O}(n)$ | Divide y Vencerás con división en $\log_2 n$ niveles y mezcla lineal. |
+| **ShellSort** | `ordenar` | $\mathcal{O}(n^{3/2})$ prom. | $\mathcal{O}(1)$ *in-place* | Inserción con saltos decrecientes de Knuth ($h = 3h + 1$). |
 
 ---
 
 ## 💻 Comandos Disponibles de la Consola CLI
 
-La aplicación interactúa mediante un prompt dinámico (`Komorebi [archivo_activo]> `), **sin menús numéricos**:
+La aplicación interactúa mediante un prompt dinámico (`Komorebi [/ruta]> `), **sin menús numéricos**:
 
-| Comando | Sintaxis de Ejemplo | Descripción |
+### Gestión del Workspace Jerárquico (Árbol N-ario y Lista Enlazada)
+| Comando | Sintaxis | Descripción |
 | :--- | :--- | :--- |
-| `new` | `new main.cpp int main() { return 0; }` | Crea un archivo en memoria y genera respaldo en disco. |
-| `list` | `list` | Muestra todos los archivos abiertos y marca el activo. |
-| `switch` | `switch main.cpp` o `switch 1` | Alterna el archivo activo por nombre o posición. |
-| `delete` | `delete main.cpp` | Cierra el archivo y libera sus nodos en memoria. |
-| `config` | `config config.json` | Carga parámetros externos o imprime la configuración activa. |
-| `check` | `check` | Valida balanceo de delimitadores `()`, `{}`, `[]` usando Pila. |
-| `undo` | `undo` | Deshace la última modificación usando la pila de retroceso. |
-| `redo` | `redo` | Rehace el cambio revertido usando la pila de avance. |
-| `sort` | `sort line mergesort` | Ordena alertas por línea o gravedad usando MergeSort o ShellSort. |
-| `queue-status` | `queue-status` | Muestra el estado del buffer FIFO de peticiones de IA. |
-| `analyze` | `analyze` | Encola en el buffer y solicita análisis $Big\ O$ a la IA. |
-| `edit` | `edit x = 10` | Agrega código al archivo activo registrando historial. |
-| `show` | `show` | Imprime el contenido del archivo actual numerando líneas. |
-| `help` | `help` | Imprime la guía de todos los comandos disponibles. |
-| `exit` | `exit` | Cierra ordenadamente la sesión. |
+| `mkdir` | `mkdir <ruta>` | Crea un nuevo directorio en el árbol N-ario del Workspace. |
+| `cd` | `cd [ruta]` | Cambia el directorio actual soportando rutas absolutas, relativas, `.` y `..`. |
+| `pwd` | `pwd` | Muestra la ruta absoluta del directorio de trabajo actual. |
+| `ls` | `ls [ruta]` | Lista los archivos y subcarpetas directos del directorio indicado. |
+| `tree` | `tree [ruta]` | Dibuja la jerarquía del Workspace mediante recorrido preorden iterativo con `Pila`. |
+| `mv` | `mv <origen> <destino>` | Mueve o renombra un archivo o carpeta previniendo ciclos jerárquicos. |
+| `new` | `new <nombre> [contenido]` | Crea un archivo en el directorio actual, lo abre en la sesión y guarda respaldo físico. |
+| `list` | `list [nombre_o_ruta]` | Muestra los archivos abiertos en sesión indicando su ruta en el Workspace. |
+| `switch` | `switch <id/nombre/ruta>` | Cambia el archivo activo detectando ambigüedades si existen homónimos. |
+| `delete` | `delete <nombre_o_ruta>` | Elimina un archivo o carpeta del árbol N-ario, la lista enlazada, el índice B-Tree y el disco. |
+| `edit` | `edit <linea_de_codigo>` | Agrega una línea de código al archivo activo registrando historial Undo/Redo. |
+| `show` | `show` | Imprime el contenido numerado del archivo activo. |
+
+### Evaluación Aritmética Exacta (Árbol Binario de Expresiones)
+| Comando | Sintaxis | Descripción |
+| :--- | :--- | :--- |
+| `eval` | `eval ["<expresion>"] [--tree]` | Evalúa una expresión aritmética exacta (o las líneas aritméticas del archivo activo) mostrando recorridos inorden, preorden, postorden (RPN) y árbol ASCII opcional. |
+
+### Diccionario Técnico y Autocompletado (Árbol AVL)
+| Comando | Sintaxis | Descripción |
+| :--- | :--- | :--- |
+| `add-keyword` | `add-keyword <palabra> [descripcion]` | Inserta una nueva palabra clave en el diccionario AVL autobalanceado. |
+| `suggest` | `suggest <prefijo>` | Autocompleta palabras clave por prefijo usando búsqueda con poda en $\mathcal{O}(\log n + k)$. |
+| `remove-keyword` | `remove-keyword <palabra>` | Elimina una palabra clave del diccionario AVL rebalanceando los ancestros. |
+
+### Indexación Global de Tokens (Árbol B de Orden $m=4$)
+| Comando | Sintaxis | Descripción |
+| :--- | :--- | :--- |
+| `index-all` | `index-all` | Escanea todos los archivos del Workspace e indexa sus identificadores en el Árbol B ignorando keywords del AVL. |
+| `find-global` | `find-global <token>` | Busca un identificador en el Árbol B y muestra los archivos (con ruta) y números de línea donde aparece. |
+
+### Verificación Sintáctica, Historial, Diagnósticos, IA y Sistema
+| Comando | Sintaxis | Descripción |
+| :--- | :--- | :--- |
+| `check` | `check` | Verifica el balanceo de delimitadores `()`, `{}`, `[]` usando `Pila`. |
+| `undo` | `undo` | Deshace el último cambio en el archivo activo usando la pila Undo. |
+| `redo` | `redo` | Rehace el último cambio revertido usando la pila Redo. |
+| `sort` | `sort <line\|severity> [mergesort\|shellsort] [asc\|desc]` | Ordena los diagnósticos estáticos con MergeSort o ShellSort. |
+| `queue-status` | `queue-status` | Muestra el estado de la cola FIFO de peticiones de IA. |
+| `analyze` | `analyze` | Encola y despacha el análisis de complejidad algorítmica asistido por IA. |
+| `config` | `config [ruta_json]` | Muestra o recarga la configuración externa del sistema. |
+| `help` | `help` | Muestra el listado completo de comandos disponibles y su sintaxis. |
+| `exit` | `exit` | Finaliza de forma segura la sesión del Mini IDE. |
 
 ---
 
 ## 🚀 Requisitos e Instrucciones de Ejecución
 
 ### Requisitos
-* Python 3.10 o superior (el proyecto hace uso de *Structural Pattern Matching* `match-case` y anotaciones de tipo modernas).
-* Sin dependencias externas obligatorias (utiliza únicamente la biblioteca estándar de Python: `urllib`, `json`, `shlex`, `datetime`, `unittest`).
+* Python 3.10 o superior.
+* Sin dependencias externas obligatorias (únicamente biblioteca estándar de Python: `fractions`, `math`, `shlex`, `json`, `urllib`, `datetime`, `uuid`, `unittest`).
 
 ### Ejecución de la Consola
 ```bash
 python3 main.py
 ```
-O especificando un archivo de configuración personalizado:
-```bash
-python3 main.py --config config.json
-```
 
-### Ejecución de la Suite de Pruebas Unitarias
-El proyecto cuenta con **89 pruebas unitarias automatizadas** que validan todas las capas:
+### Ejecución de la Suite de Pruebas Unitarias e Integración
+El proyecto cuenta con **133 pruebas automatizadas** (unitarias + integración E2E + auditoría arquitectónica):
 ```bash
 python3 -m unittest discover -s test -p "test_*.py" -v
 ```
 
----
-
-## ⚙️ Configuración (`config.json`)
-
-```json
-{
-  "nombre_app": "Komorebi Mini IDE",
-  "rutas": {
-    "respaldos": "respaldos",
-    "logs": "logs"
-  },
-  "ia": {
-    "proveedor": "gemini",
-    "modelo": "gemini-1.5-flash",
-    "api_key": "",
-    "url_base": "https://generativelanguage.googleapis.com/v1beta/models",
-    "endpoint_analisis": "/analizar",
-    "timeout_segundos": 15
-  },
-  "servidor": {
-    "puerto": 8000
-  }
-}
+### Demostración Empírica de Altura: Árbol AVL vs. BST sin Balanceo
+```bash
+python3 -m scripts.demo_avl_vs_bst
 ```
 
-> **Nota para la Defensa:** Si no se especifica una `api_key` o no hay conexión a internet durante la presentación, el sistema activa automáticamente su **Modo Offline Fallback**, realizando un análisis estático de complejidad local sin fallar ni congelar la aplicación.
-
 ---
 
-## 📚 Documentación del Proyecto
+## 📚 Documentación Arquitectónica y de Defensa
 
-El repositorio cuenta con guías técnicas exhaustivas en la carpeta `docs/`:
-
-* **[Guía Maestra para la Defensa Académica (`docs/guia_defensa.md`)](file:///home/entropy/Olimpo/Proyectos/Komorebi/docs/guia_defensa.md):** Guion de presentación en vivo (5-7 min), respuestas a preguntas trampa del jurado, justificación de complejidades y demo paso a paso.
-* **[Manual de Usuario y Guía Práctica (`docs/guia_de_uso.md`)](file:///home/entropy/Olimpo/Proyectos/Komorebi/docs/guia_de_uso.md):** Tutorial interactivo paso a paso, ejemplos de comandos, gestión de archivos y análisis con IA.
-* **[Guía Conceptual de Estructuras de Datos (`docs/guia_estructuras_datos.md`)](file:///home/entropy/Olimpo/Proyectos/Komorebi/docs/guia_estructuras_datos.md):** Explicación teórica profunda de punteros, justificación de diseño de cada estructura y análisis formal de complejidad temporal y espacial ($Big\ O$).
-* **[Auditoría de Aprendizaje e Integración Ética de IA (`docs/auditoria_aprendizaje_ia.md`)](file:///home/entropy/Olimpo/Proyectos/Komorebi/docs/auditoria_aprendizaje_ia.md):** Reflexión sobre el rol de la IA en la ingeniería de software y las 3 reglas de oro para defender el código.
-* **[Plan de Estructuración y Fases (`docs/plan_estructuracion.md`)](file:///home/entropy/Olimpo/Proyectos/Komorebi/docs/plan_estructuracion.md):** Hoja de ruta bottom-up seguida durante la construcción del proyecto.
-* **[Estándar de Commits (`docs/commits.md`)](file:///home/entropy/Olimpo/Proyectos/Komorebi/docs/commits.md):** Formato uniforme de control de versiones.
+* **[Mapa Arquitectónico del Proyecto (`docs/ESTRUCTURA.md`)](docs/ESTRUCTURA.md):** Árbol de directorios completo, patrones de diseño, desglose de módulos y flujos de ejecución.
+* **[Guía de Defensa — Fase 2: Estructuras Arbóreas (`docs/guia_defensa_fase2.md`)](docs/guia_defensa_fase2.md):** Explicación didáctica de las 4 estructuras arbóreas, trazas paso a paso con diagramas ASCII (rotaciones AVL, split/fusión en Árbol B, Shunting-Yard), justificación formal de complejidades y 10 preguntas avanzadas de defensa con sus respuestas.
+* **[Estándar de Commits (`docs/commits.md`)](docs/commits.md):** Convención de mensajes de commit utilizada en todas las ramas del proyecto.

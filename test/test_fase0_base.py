@@ -6,7 +6,7 @@ from typing import List
 import unittest
 
 from src.cli.consola_app import ConsolaApp
-from src.comandos.comando_base import ComandoBase
+from src.comandos.comando_cd import ComandoCd
 from src.comandos.invocador_comandos import InvocadorComandos
 from src.excepciones import (
     DivisionPorCeroError,
@@ -20,16 +20,7 @@ from src.excepciones import (
 )
 from src.nucleo.contexto_app import ContextoApp
 from src.nucleo.referencia_token import ReferenciaToken
-
-
-class _ComandoFallaSynthetix(ComandoBase):
-    """Comando auxiliar de prueba que lanza una excepción derivada de ErrorSynthetix."""
-
-    def __init__(self) -> None:
-        super().__init__("fallar-synthetix", "Comando de prueba", "fallar-synthetix")
-
-    def ejecutar(self, argumentos: List[str]) -> bool:
-        raise RutaInvalidaError("La ruta '/inexistente' no fue encontrada en el workspace.")
+from src.servicios.servicio_workspace import ServicioWorkspace
 
 
 class TestFase0Base(unittest.TestCase):
@@ -80,16 +71,16 @@ class TestFase0Base(unittest.TestCase):
     def test_consola_captura_error_synthetix_y_muestra_mensaje(self) -> None:
         contexto = ContextoApp()
         invocador = InvocadorComandos()
-        invocador.registrar_comando(_ComandoFallaSynthetix())
+        invocador.registrar_comando(ComandoCd(ServicioWorkspace(contexto)))
         consola = ConsolaApp(invocador, contexto)
 
         buffer_salida = io.StringIO()
         with redirect_stdout(buffer_salida):
-            exito = consola.ejecutar_linea("fallar-synthetix")
+            exito = consola.ejecutar_linea("cd /inexistente")
 
         salida = buffer_salida.getvalue()
         self.assertFalse(exito)
-        self.assertIn("La ruta '/inexistente' no fue encontrada en el workspace.", salida)
+        self.assertIn("inexistente", salida)
 
 
 if __name__ == "__main__":

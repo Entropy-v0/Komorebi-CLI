@@ -45,5 +45,11 @@ class InvocadorComandos:
             return False
 
     def listar_comandos(self) -> List[ComandoBase]:
-        """Retorna todos los comandos registrados ordenados por su nombre."""
-        return sorted(self._comandos.values(), key=lambda c: c.nombre)
+        """Retorna todos los comandos registrados ordenados alfabéticamente por su nombre."""
+        ordenados: List[ComandoBase] = []
+        for cmd in self._comandos.values():
+            pos = 0
+            while pos < len(ordenados) and ordenados[pos].nombre < cmd.nombre:
+                pos += 1
+            ordenados.insert(pos, cmd)
+        return ordenados
