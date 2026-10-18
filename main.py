@@ -8,6 +8,10 @@ import sys
 from src.nucleo.contexto_app import ContextoApp
 from src.servicios.servicio_configuracion import ServicioConfiguracion
 from src.servicios.servicio_archivos import ServicioArchivos
+from src.servicios.servicio_workspace import ServicioWorkspace
+from src.servicios.servicio_expresiones import ServicioExpresiones
+from src.servicios.servicio_diccionario import ServicioDiccionario
+from src.servicios.servicio_indexacion import ServicioIndexacion
 from src.servicios.servicio_sintaxis import ServicioSintaxis
 from src.servicios.servicio_historial import ServicioHistorial
 from src.servicios.servicio_diagnosticos import ServicioDiagnosticos
@@ -31,6 +35,18 @@ from src.comandos.comando_edit import ComandoEdit
 from src.comandos.comando_show import ComandoShow
 from src.comandos.comando_help import ComandoHelp
 from src.comandos.comando_exit import ComandoExit
+from src.comandos.comando_mkdir import ComandoMkdir
+from src.comandos.comando_cd import ComandoCd
+from src.comandos.comando_pwd import ComandoPwd
+from src.comandos.comando_ls import ComandoLs
+from src.comandos.comando_tree import ComandoTree
+from src.comandos.comando_mv import ComandoMv
+from src.comandos.comando_eval import ComandoEval
+from src.comandos.comando_add_keyword import ComandoAddKeyword
+from src.comandos.comando_suggest import ComandoSuggest
+from src.comandos.comando_remove_keyword import ComandoRemoveKeyword
+from src.comandos.comando_index_all import ComandoIndexAll
+from src.comandos.comando_find_global import ComandoFindGlobal
 
 from src.cli.consola_app import ConsolaApp
 
@@ -51,6 +67,11 @@ def bootstrap(ruta_config: str = "config.json") -> ConsolaApp:
     # 3. Inicialización de los servicios de negocio (Receptores)
     servicio_logs = ServicioLogs(configuracion.ruta_logs)
     servicio_archivos = ServicioArchivos(contexto, servicio_logs)
+    servicio_workspace = ServicioWorkspace(contexto, servicio_archivos, servicio_logs)
+    servicio_expresiones = ServicioExpresiones()
+    servicio_diccionario = ServicioDiccionario(contexto, servicio_logs)
+    servicio_indexacion = ServicioIndexacion(contexto, servicio_logs)
+    servicio_archivos.servicio_indexacion = servicio_indexacion
     servicio_sintaxis = ServicioSintaxis()
     servicio_historial = ServicioHistorial()
     servicio_diagnosticos = ServicioDiagnosticos()
@@ -74,6 +95,18 @@ def bootstrap(ruta_config: str = "config.json") -> ConsolaApp:
     invocador.registrar_comando(ComandoShow(contexto))
     invocador.registrar_comando(ComandoHelp(invocador))
     invocador.registrar_comando(ComandoExit())
+    invocador.registrar_comando(ComandoMkdir(servicio_workspace))
+    invocador.registrar_comando(ComandoCd(servicio_workspace))
+    invocador.registrar_comando(ComandoPwd(servicio_workspace))
+    invocador.registrar_comando(ComandoLs(servicio_workspace))
+    invocador.registrar_comando(ComandoTree(servicio_workspace))
+    invocador.registrar_comando(ComandoMv(servicio_workspace))
+    invocador.registrar_comando(ComandoEval(servicio_expresiones, contexto))
+    invocador.registrar_comando(ComandoAddKeyword(servicio_diccionario))
+    invocador.registrar_comando(ComandoSuggest(servicio_diccionario))
+    invocador.registrar_comando(ComandoRemoveKeyword(servicio_diccionario))
+    invocador.registrar_comando(ComandoIndexAll(servicio_indexacion))
+    invocador.registrar_comando(ComandoFindGlobal(servicio_indexacion))
 
     # 5. Creación de la consola interactiva CLI
     return ConsolaApp(invocador, contexto, servicio_logs=servicio_logs)

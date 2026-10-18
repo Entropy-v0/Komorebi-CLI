@@ -10,8 +10,15 @@ class ReferenciaToken:
 
     __slots__ = ("_id_archivo", "_linea")
 
-    def __init__(self, id_archivo: str, linea: int) -> None:
-        id_limpio = str(id_archivo).strip()
+    def __init__(
+        self,
+        id_archivo: str = "",
+        linea: int = 1,
+        *,
+        archivo_id: str = "",
+    ) -> None:
+        id_final = id_archivo if id_archivo else archivo_id
+        id_limpio = str(id_final).strip()
         if not id_limpio:
             raise ValueError("El id_archivo de ReferenciaToken no puede estar vacío.")
         if int(linea) < 1:
@@ -23,6 +30,11 @@ class ReferenciaToken:
     @property
     def id_archivo(self) -> str:
         """Retorna el identificador único del archivo donde aparece el token."""
+        return self._id_archivo
+
+    @property
+    def archivo_id(self) -> str:
+        """Alias del identificador único del archivo donde aparece el token."""
         return self._id_archivo
 
     @property

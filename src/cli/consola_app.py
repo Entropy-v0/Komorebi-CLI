@@ -39,7 +39,16 @@ class ConsolaApp:
         return self._contexto
 
     def generar_prompt(self) -> str:
-        """Genera el texto del prompt dinámico según el archivo activo actual."""
+        """Genera el texto del prompt dinámico según la ruta actual del workspace o archivo activo."""
+        dir_actual = self._contexto.directorio_actual
+        if dir_actual is not None:
+            ruta = (
+                dir_actual.obtener_ruta_absoluta()
+                if hasattr(dir_actual, "obtener_ruta_absoluta")
+                else str(dir_actual)
+            )
+            return f"Komorebi [{ruta}]> "
+
         archivo_activo = self._contexto.archivo_activo
         nombre_mostrado = archivo_activo.nombre if archivo_activo else "sin-archivo"
         return f"Komorebi [{nombre_mostrado}]> "
