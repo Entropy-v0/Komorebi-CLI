@@ -1,21 +1,38 @@
 """Módulo que define el modelo de dominio para archivos de código en memoria."""
 
 from datetime import datetime
-from typing import List
+from typing import List, Optional
+import uuid
 
 
 class ArchivoCodigo:
     """Representa un archivo o fragmento de código fuente abierto en la sesión del IDE.
     
-    Encapsula el nombre del fichero, su contenido textual, y sus metadatos temporales
-    de creación y última modificación.
+    Encapsula un identificador único e inmutable, el nombre del fichero, su contenido
+    textual, y sus metadatos temporales de creación y última modificación.
     """
 
-    def __init__(self, nombre: str, contenido: str = "") -> None:
+    def __init__(
+        self,
+        nombre: str,
+        contenido: str = "",
+        id_archivo: Optional[str] = None,
+    ) -> None:
+        self._id_archivo: str = id_archivo or f"file-{uuid.uuid4().hex[:8]}"
         self._nombre: str = nombre
         self._contenido: str = contenido
         self._fecha_creacion: datetime = datetime.now()
         self._fecha_modificacion: datetime = self._fecha_creacion
+
+    @property
+    def id_archivo(self) -> str:
+        """Retorna el identificador único e inmutable del archivo."""
+        return self._id_archivo
+
+    @property
+    def id(self) -> str:
+        """Alias del identificador único e inmutable del archivo."""
+        return self._id_archivo
 
     @property
     def nombre(self) -> str:
@@ -65,7 +82,7 @@ class ArchivoCodigo:
         return self._contenido.splitlines()
 
     def __repr__(self) -> str:
-        return f"ArchivoCodigo(nombre={self._nombre!r}, lineas={self.conteo_lineas})"
+        return f"ArchivoCodigo(id={self._id_archivo!r}, nombre={self._nombre!r}, lineas={self.conteo_lineas})"
 
     def __str__(self) -> str:
         return f"{self._nombre} ({self.conteo_lineas} líneas, modificado: {self._fecha_modificacion.strftime('%Y-%m-%d %H:%M:%S')})"
@@ -73,4 +90,7 @@ class ArchivoCodigo:
     def __eq__(self, otro: object) -> bool:
         if not isinstance(otro, ArchivoCodigo):
             return False
-        return self._nombre == otro._nombre
+        return self._id_archivo == otro._id_archivo
+
+    def __hash__(self) -> int:
+        return hash(self._id_archivo)

@@ -83,6 +83,37 @@ class TestContextoApp(unittest.TestCase):
         self.assertEqual(len(self.contexto.diagnosticos), 2)
         self.assertEqual(self.contexto.diagnosticos[0].severidad, "WARN")
 
+    def test_atributos_fase2_inicialmente_none_y_mutables(self) -> None:
+        self.assertIsNone(self.contexto.workspace)
+        self.assertIsNone(self.contexto.directorio_actual)
+        self.assertIsNone(self.contexto.diccionario)
+        self.assertIsNone(self.contexto.indice_global)
+
+        self.contexto.workspace = "mock_workspace"
+        self.contexto.directorio_actual = "/src"
+        self.contexto.diccionario = "mock_avl"
+        self.contexto.indice_global = "mock_btree"
+
+        self.assertEqual(self.contexto.workspace, "mock_workspace")
+        self.assertEqual(self.contexto.directorio_actual, "/src")
+        self.assertEqual(self.contexto.diccionario, "mock_avl")
+        self.assertEqual(self.contexto.indice_global, "mock_btree")
+
+    def test_archivos_mismo_nombre_distinto_id(self) -> None:
+        arc1 = ArchivoCodigo("app.py", "# src/app.py")
+        arc2 = ArchivoCodigo("app.py", "# test/app.py")
+        self.contexto.abrir_archivo(arc1)
+        self.contexto.abrir_archivo(arc2)
+
+        self.assertEqual(len(self.contexto.archivos_abiertos), 2)
+        self.assertEqual(self.contexto.buscar_archivo_por_id(arc1.id_archivo), arc1)
+        self.assertEqual(self.contexto.buscar_archivo_por_id(arc2.id_archivo), arc2)
+        self.assertEqual(len(self.contexto.buscar_archivos_por_nombre("app.py")), 2)
+
+        self.assertTrue(self.contexto.cerrar_archivo_por_id(arc1.id_archivo))
+        self.assertEqual(len(self.contexto.archivos_abiertos), 1)
+        self.assertEqual(self.contexto.archivo_activo, arc2)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,9 +1,10 @@
 """Módulo de la consola interactiva REPL de la aplicación Komorebi."""
 
 import sys
-from typing import Optional
+from typing import Any, Optional
 from src.cli.analizador_comandos import AnalizadorComandos
 from src.comandos.invocador_comandos import InvocadorComandos
+from src.excepciones.error_synthetix import ErrorSynthetix
 from src.nucleo.contexto_app import ContextoApp
 
 
@@ -45,13 +46,19 @@ class ConsolaApp:
 
     def ejecutar_linea(self, linea: str) -> bool:
         """Procesa una única línea de comando (útil para pruebas y modo por lotes)."""
-        nombre_cmd, args = self._analizador.parsear(linea)
-        if not nombre_cmd:
-            return True
-        exito = self._invocador.ejecutar_comando(nombre_cmd, args)
-        if not exito and self._servicio_logs:
-            self._servicio_logs.registrar_advertencia("ConsolaApp", f"Comando no reconocido o fallido: '{linea.strip()}'")
-        return exito
+        try:
+            nombre_cmd, args = self._analizador.parsear(linea)
+            if not nombre_cmd:
+                return True
+            exito = self._invocador.ejecutar_comando(nombre_cmd, args)
+            if not exito and self._servicio_logs:
+                self._servicio_logs.registrar_advertencia("ConsolaApp", f"Comando no reconocido o fallido: '{linea.strip()}'")
+            return exito
+        except ErrorSynthetix as e:
+            if self._servicio_logs:
+                self._servicio_logs.registrar_advertencia("ConsolaApp", f"Error de dominio: {e.mensaje}")
+            print(f"[Error] {e.mensaje}")
+            return False
 
     def iniciar_repl(self) -> None:
         """Inicia el ciclo continuo de terminal hasta que el usuario invoque 'exit' o Ctrl+D."""
@@ -69,6 +76,10 @@ class ConsolaApp:
             except SystemExit:
                 self._en_ejecucion = False
                 break
+            except ErrorSynthetix as e:
+                if self._servicio_logs:
+                    self._servicio_logs.registrar_advertencia("ConsolaApp", f"Error de dominio: {e.mensaje}")
+                print(f"[Error] {e.mensaje}")
             except Exception as e:
                 if self._servicio_logs:
                     self._servicio_logs.registrar_error("ConsolaApp", f"Excepción no controlada: {str(e)}")
